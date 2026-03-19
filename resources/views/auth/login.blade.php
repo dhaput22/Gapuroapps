@@ -19,6 +19,13 @@
             </h1>
         </div>
 
+        <!-- ERROR LOGIN (username/password salah) -->
+        @if (session('error'))
+        <div class="mb-4 px-4 py-3 rounded-md bg-red-500/80 text-white text-sm">
+            {{ session('error') }}
+        </div>
+        @endif
+
         <form method="POST" action="{{ route('login') }}" class="space-y-4">
             @csrf
 
@@ -26,12 +33,14 @@
                 <input type="text" name="username"
                     placeholder="Enter your username"
                     class="w-full px-4 py-2 rounded-md bg-white/90 border border-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                @error('username') <p class="mt-1 text-sm text-red-400">{{ $message }}</p> @enderror
             </div>
 
             <div>
                 <input type="password" name="password"
                     placeholder="Password"
                     class="w-full px-4 py-2 rounded-md bg-white/90 border border-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                @error('password') <p class="mt-1 text-sm text-red-400">{{ $message }}</p> @enderror
             </div>
 
             <button type="submit"

@@ -14,6 +14,6 @@ class Authenticate extends Middleware
         if (!$request->expectsJson()) {
             return route('login');
         }
-        return null;
+        return back()->with('error', 'Username atau password salah.');
     }
 }
