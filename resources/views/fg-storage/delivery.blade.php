@@ -25,9 +25,9 @@
                 <option>Date Injection</option>
             </select>
 
-            <input type="date" value="2025-10-26" class="h-9 rounded border border-gray-300 bg-white px-2 text-sm">
+            <input type="date" value="{{ now()->format('Y-m-d') }}" class="h-9 rounded border border-gray-300 bg-white px-2 text-sm">
             <span class="text-xs text-gray-500">To</span>
-            <input type="date" value="2025-10-26" class="h-9 rounded border border-gray-300 bg-white px-2 text-sm">
+            <input type="date" value="{{ now()->format('Y-m-d') }}" class="h-9 rounded border border-gray-300 bg-white px-2 text-sm">
 
             <span class="ml-4 text-gray-600">Search By</span>
 
@@ -53,9 +53,9 @@
                 <option>Search Date</option>
             </select>
 
-            <input type="date" value="2025-10-26" class="h-9 ml-3 rounded border border-gray-300 bg-white px-2 text-sm">
+            <input type="date" value="{{ now()->format('Y-m-d') }}" class="h-9 ml-3 rounded border border-gray-300 bg-white px-2 text-sm">
             <span class="text-xs text-gray-500">To</span>
-            <input type="date" value="2025-10-26" class="h-9 rounded border border-gray-300 bg-white px-2 text-sm">
+            <input type="date" value="{{ now()->format('Y-m-d') }}" class="h-9 rounded border border-gray-300 bg-white px-2 text-sm">
         </div>
 
         <div class="flex flex-wrap items-center gap-2">

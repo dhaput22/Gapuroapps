@@ -88,6 +88,17 @@
                             </button>
                         </li>
 
+                        <li class="border-t">
+                            <a href="{{ route('operators.index') }}" class="block w-full px-4 py-3 hover:bg-gray-50">
+                                <span class="flex items-center gap-2">
+                                    <svg class="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                    Operator
+                                </span>
+                            </a>
+                        </li>
+
                         <!-- <li class="border-t">
                             <button data-accordion="acc-5" class="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-gray-50">
                                 <span class="flex items-center gap-2">

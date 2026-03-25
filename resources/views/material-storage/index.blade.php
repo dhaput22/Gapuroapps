@@ -25,9 +25,9 @@
                 <option>Filter Date</option>
             </select>
 
-            <input type="text" placeholder="Date From" class="h-9 w-24 rounded border border-gray-300 bg-white px-2 text-sm">
+            <input type="date" value="{{ now()->format('Y-m-d') }}" class="h-9 w-36 rounded border border-gray-300 bg-white px-2 text-sm">
             <span class="text-xs text-gray-500">To</span>
-            <input type="text" placeholder="Date To" class="h-9 w-24 rounded border border-gray-300 bg-white px-2 text-sm">
+            <input type="date" value="{{ now()->format('Y-m-d') }}" class="h-9 w-36 rounded border border-gray-300 bg-white px-2 text-sm">
 
             <span class="ml-4 text-gray-600">Search By</span>
 
@@ -242,3 +242,4 @@
     </div>
 </div>
 @endsection
+
