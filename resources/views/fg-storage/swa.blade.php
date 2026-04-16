@@ -29,7 +29,35 @@
         </div>
     @endif
 
+    @php
+        $currentSortBy = $filters['sort_by'] ?? 'created_at';
+        $currentSortDir = strtolower($filters['sort_dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+        $canManageWarehouseData = auth()->user()?->canManageWarehouseData() ?? false;
+
+        $sortUrl = static function (string $column) use ($filters, $currentSortBy, $currentSortDir): string {
+            $nextDirection = $currentSortBy === $column && $currentSortDir === 'asc' ? 'desc' : 'asc';
+
+            $query = [
+                'date_filter' => $filters['date_filter'] ?? null,
+                'date_from' => $filters['date_from'] ?? null,
+                'date_to' => $filters['date_to'] ?? null,
+                'search_by' => $filters['search_by'] ?? null,
+                'keyword' => $filters['keyword'] ?? null,
+                'page_size' => $filters['page_size'] ?? null,
+                'sort_by' => $column,
+                'sort_dir' => $nextDirection,
+            ];
+
+            $query = array_filter($query, static fn($value) => $value !== null && $value !== '');
+
+            return route('fg.storage.swa', $query);
+        };
+    @endphp
+
     <form method="GET" action="{{ route('fg.storage.swa') }}" class="rounded border border-gray-200 bg-gray-100 px-4 py-3">
+        <input type="hidden" name="sort_by" value="{{ $currentSortBy }}">
+        <input type="hidden" name="sort_dir" value="{{ $currentSortDir }}">
+
         <div class="mb-2 flex flex-wrap items-center gap-2">
             <span class="w-20 text-gray-600">Date Filter</span>
 
@@ -114,20 +142,52 @@
         <table class="min-w-full border-collapse text-xs">
             <thead class="bg-yellow-200 text-gray-700">
                 <tr>
-                    <th class="w-8 border border-yellow-300 px-2 py-2 text-center">#</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Part Code</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Part Name</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Start Lot No</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">End Lot No</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Qty Box</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Total Scan</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Total Plan</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Gap</th>
+                    <th class="w-8 border border-yellow-300 px-2 py-2 text-center">
+                        <a href="{{ $sortUrl('created_at') }}" class="inline-flex items-center gap-1 hover:underline">
+                            <span>#</span>
+                        </a>
+                    </th>
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">
+                        <a href="{{ $sortUrl('part_code') }}" class="inline-flex items-center gap-1 hover:underline">
+                            <span>Part Code</span>
+                        </a>
+                    </th>
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">
+                        <a href="{{ $sortUrl('part_name') }}" class="inline-flex items-center gap-1 hover:underline">
+                            <span>Part Name</span>
+                        </a>
+                    </th>
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">
+                        <a href="{{ $sortUrl('start_lot_no') }}" class="inline-flex items-center gap-1 hover:underline">
+                            <span>Start Lot No</span>
+                        </a>
+                    </th>
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">
+                        <a href="{{ $sortUrl('end_lot_no') }}" class="inline-flex items-center gap-1 hover:underline">
+                            <span>End Lot No</span>
+                        </a>
+                    </th>
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">
+                        <a href="{{ $sortUrl('qty_box') }}" class="inline-flex items-center gap-1 hover:underline">
+                            <span>Qty Box</span>
+                        </a>
+                    </th>
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">Total Scan</th>
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">
+                        <a href="{{ $sortUrl('total_plan') }}" class="inline-flex items-center gap-1 hover:underline">
+                            <span>Total Plan</span>
+                        </a>
+                    </th>
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">Gap</th>
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">Result</th>
                     <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">Action</th>
                 </tr>
             </thead>
             <tbody class="bg-yellow-50">
                 @forelse ($plans as $plan)
+                    @php
+                        $isMatch = (int) $plan->total_scan === (int) $plan->total_plan;
+                    @endphp
                     <tr>
                         <td class="border border-yellow-200 px-2 py-1 text-center">{{ ($plans->firstItem() ?? 0) + $loop->index }}</td>
                         <td class="border border-yellow-200 px-2 py-1">{{ $plan->part_code }}</td>
@@ -138,26 +198,33 @@
                         <td class="border border-yellow-200 px-2 py-1">{{ number_format((int) $plan->total_scan) }}</td>
                         <td class="border border-yellow-200 px-2 py-1">{{ number_format((int) $plan->total_plan) }}</td>
                         <td class="border border-yellow-200 px-2 py-1">{{ number_format((int) $plan->total_plan - (int) $plan->total_scan) }}</td>
+                        <td class="border border-yellow-200 px-2 py-1 font-semibold {{ $isMatch ? 'text-green-700' : 'text-red-700' }}">
+                            {{ $isMatch ? 'OK' : 'NO MATCH' }}
+                        </td>
                         <td class="border border-yellow-200 px-2 py-1 text-center">
-                            <div class="inline-flex items-center gap-1">
-                                <a href="{{ route('fg.storage.swa.edit', $plan) }}"
-                                    class="rounded border border-blue-300 bg-blue-50 px-2 py-1 text-[11px] text-blue-700">
-                                    Edit
-                                </a>
-                                <form method="POST" action="{{ route('fg.storage.swa.destroy', $plan) }}" onsubmit="return confirm('Hapus plan ini?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                        class="rounded border border-red-300 bg-red-50 px-2 py-1 text-[11px] text-red-700">
-                                        Delete
-                                    </button>
-                                </form>
-                            </div>
+                            @if ($canManageWarehouseData)
+                                <div class="inline-flex items-center gap-1">
+                                    <a href="{{ route('fg.storage.swa.edit', $plan) }}"
+                                        class="rounded border border-blue-300 bg-blue-50 px-2 py-1 text-[11px] text-blue-700">
+                                        Edit
+                                    </a>
+                                    <form method="POST" action="{{ route('fg.storage.swa.destroy', $plan) }}" onsubmit="return confirm('Hapus plan ini?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            class="rounded border border-red-300 bg-red-50 px-2 py-1 text-[11px] text-red-700">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            @else
+                                <span class="text-[11px] text-gray-500">View only</span>
+                            @endif
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="10" class="border border-yellow-200 px-3 py-3 text-center text-gray-500">
+                        <td colspan="11" class="border border-yellow-200 px-3 py-3 text-center text-gray-500">
                             Belum ada plan SWA yang terdaftar. Klik tombol <strong>Create/Register Plan</strong> untuk menambah data.
                         </td>
                     </tr>
@@ -165,7 +232,7 @@
 
                 @if ($plans->count() > 0)
                     <tr>
-                        <td colspan="10" class="border border-yellow-200 px-2 py-1 text-center text-gray-500">
+                        <td colspan="11" class="border border-yellow-200 px-2 py-1 text-center text-gray-500">
                             <div class="flex items-center justify-center gap-2">
                                 <a href="{{ $plans->onFirstPage() ? '#' : $plans->url(1) }}"
                                     class="rounded border px-1 {{ $plans->onFirstPage() ? 'cursor-not-allowed bg-gray-100 text-gray-400' : 'bg-white text-gray-700' }}">

@@ -17,7 +17,7 @@ class RegisteredUserController extends Controller
         return view('auth.register');
     }
 
-    // simpan user baru (role = admin)
+    // simpan user baru (default role = leader)
     public function store(Request $request)
     {
         // validasi
@@ -34,7 +34,7 @@ class RegisteredUserController extends Controller
             'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'admin',
+            'role' => User::ROLE_LEADER,
             'status' => 'active',
         ]);
 

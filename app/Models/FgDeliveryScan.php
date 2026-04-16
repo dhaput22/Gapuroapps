@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class FgReceivingScan extends Model
+class FgDeliveryScan extends Model
 {
     use HasFactory;
 
@@ -17,9 +17,8 @@ class FgReceivingScan extends Model
         'lot_no',
         'qty_box',
         'scanned_at',
-        'created_by',
         'operator_id',
-        'scan_state',
+        'created_by',
         'delivery_at',
         'delivery_operator_id',
         'transfer_card_no',

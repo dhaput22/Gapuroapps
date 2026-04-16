@@ -29,6 +29,26 @@
         </div>
     @endif
 
+    @php
+        $currentSortBy = $filters['sort_by'] ?? 'created_at';
+        $currentSortDir = strtolower($filters['sort_dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+
+        $sortUrl = static function (string $column) use ($filters, $currentSortBy, $currentSortDir): string {
+            $nextDirection = $currentSortBy === $column && $currentSortDir === 'asc' ? 'desc' : 'asc';
+
+            $query = [
+                'keyword' => $filters['keyword'] ?? null,
+                'page_size' => $filters['page_size'] ?? null,
+                'sort_by' => $column,
+                'sort_dir' => $nextDirection,
+            ];
+
+            $query = array_filter($query, static fn($value) => $value !== null && $value !== '');
+
+            return route('operators.index', $query);
+        };
+    @endphp
+
     <form method="POST" action="{{ route('operators.store') }}" class="rounded border border-gray-200 bg-gray-50 px-4 py-4">
         @csrf
         <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -56,6 +76,9 @@
     </form>
 
     <form method="GET" action="{{ route('operators.index') }}" class="rounded border border-gray-200 bg-gray-100 px-4 py-3">
+        <input type="hidden" name="sort_by" value="{{ $currentSortBy }}">
+        <input type="hidden" name="sort_dir" value="{{ $currentSortDir }}">
+
         <div class="flex flex-wrap items-center gap-2">
             <span class="text-gray-600">Search</span>
             <input type="text" name="keyword" value="{{ $filters['keyword'] ?? '' }}" placeholder="ID / Nama / Departemen"
@@ -76,10 +99,18 @@
         <table class="min-w-full border-collapse text-xs">
             <thead class="bg-yellow-200 text-gray-700">
                 <tr>
-                    <th class="w-8 border border-yellow-300 px-2 py-2 text-center">#</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Nomor ID</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Nama</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Departemen</th>
+                    <th class="w-8 border border-yellow-300 px-2 py-2 text-center">
+                        <a href="{{ $sortUrl('created_at') }}" class="hover:underline">#</a>
+                    </th>
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">
+                        <a href="{{ $sortUrl('employee_id') }}" class="hover:underline">Nomor ID</a>
+                    </th>
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">
+                        <a href="{{ $sortUrl('name') }}" class="hover:underline">Nama</a>
+                    </th>
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">
+                        <a href="{{ $sortUrl('department') }}" class="hover:underline">Departemen</a>
+                    </th>
                     <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">Action</th>
                 </tr>
             </thead>
@@ -138,4 +169,3 @@
     </div>
 </div>
 @endsection
-

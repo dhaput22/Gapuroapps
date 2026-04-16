@@ -21,16 +21,45 @@
     </div>
 
     @if (session('success'))
-        <div class="rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
-            {{ session('success') }}
-        </div>
+    <div class="rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+        {{ session('success') }}
+    </div>
     @endif
 
     @if ($errors->any())
-        <div class="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {{ $errors->first() }}
-        </div>
+    <div class="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        {{ $errors->first() }}
+    </div>
     @endif
+
+    @php
+    $currentSortBy = $filters['sort_by'] ?? 'scanned_at';
+    $currentSortDir = strtolower($filters['sort_dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+
+    $sortUrl = static function (string $column) use (
+    $filters,
+    $currentSortBy,
+    $currentSortDir,
+    $defaultPartCode,
+    $defaultOperatorEmployeeId
+    ): string {
+    $nextDirection = $currentSortBy === $column && $currentSortDir === 'asc' ? 'desc' : 'asc';
+
+    $query = [
+    'receiving_date' => $filters['receiving_date'] ?? null,
+    'page_size' => $filters['page_size'] ?? null,
+    'carry' => 1,
+    'part_code' => $defaultPartCode ?? null,
+    'operator_employee_id' => $defaultOperatorEmployeeId ?? null,
+    'sort_by' => $column,
+    'sort_dir' => $nextDirection,
+    ];
+
+    $query = array_filter($query, static fn($value) => $value !== null && $value !== '');
+
+    return route('fg.storage.receiving.create-unregistered', $query);
+    };
+    @endphp
 
     <form id="scan-register-form" method="POST" action="{{ route('fg.storage.receiving.create-unregistered.store') }}"
         class="grid gap-x-12 gap-y-3 rounded border border-gray-200 bg-gray-50 px-3 py-4 lg:grid-cols-2 lg:px-10">
@@ -116,13 +145,25 @@
         <table class="min-w-full border-collapse text-xs">
             <thead class="bg-yellow-200 text-gray-700">
                 <tr>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Injection Date</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Part Code</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Part Name</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Lot No</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Qty</th>
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">
+                        <a href="{{ $sortUrl('scanned_at') }}" class="hover:underline">Injection Date</a>
+                    </th>
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">
+                        <a href="{{ $sortUrl('part_code') }}" class="hover:underline">Part Code</a>
+                    </th>
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">
+                        <a href="{{ $sortUrl('part_name') }}" class="hover:underline">Part Name</a>
+                    </th>
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">
+                        <a href="{{ $sortUrl('lot_no') }}" class="hover:underline">Lot No</a>
+                    </th>
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">
+                        <a href="{{ $sortUrl('qty_box') }}" class="hover:underline">Qty</a>
+                    </th>
                     <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Storage</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Storage Date</th>
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">
+                        <a href="{{ $sortUrl('scanned_at') }}" class="hover:underline">Storage Date</a>
+                    </th>
                     <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Delivery</th>
                     <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Delivery Date</th>
                     <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">QC Status</th>
@@ -132,52 +173,52 @@
             </thead>
             <tbody class="bg-yellow-50">
                 @forelse ($scans as $scan)
-                    <tr>
-                        <td class="border border-yellow-200 px-2 py-1">{{ optional($scan->scanned_at)->format('Y-m-d') ?? optional($scan->created_at)->format('Y-m-d') }}</td>
-                        <td class="border border-yellow-200 px-2 py-1">{{ $scan->part_code }}</td>
-                        <td class="border border-yellow-200 px-2 py-1">{{ $scan->part_name }}</td>
-                        <td class="border border-yellow-200 px-2 py-1">{{ $scan->lot_no }}</td>
-                        <td class="border border-yellow-200 px-2 py-1">{{ number_format((int) $scan->qty_box) }}</td>
-                        <td class="border border-yellow-200 px-2 py-1">2nd Floor</td>
-                        <td class="border border-yellow-200 px-2 py-1">{{ optional($scan->scanned_at)->format('Y-m-d') ?? optional($scan->created_at)->format('Y-m-d') }}</td>
-                        <td class="border border-yellow-200 px-2 py-1">-</td>
-                        <td class="border border-yellow-200 px-2 py-1">-</td>
-                        <td class="border border-yellow-200 px-2 py-1">-</td>
-                        <td class="border border-yellow-200 px-2 py-1">{{ $scan->operator ? ($scan->operator->name) : '-' }}</td>
-                        <td class="border border-yellow-200 px-2 py-1">From SWA Plan</td>
-                    </tr>
+                <tr>
+                    <td class="border border-yellow-200 px-2 py-1">{{ optional($scan->scanned_at)->format('Y-m-d') ?? optional($scan->created_at)->format('Y-m-d') }}</td>
+                    <td class="border border-yellow-200 px-2 py-1">{{ $scan->part_code }}</td>
+                    <td class="border border-yellow-200 px-2 py-1">{{ $scan->part_name }}</td>
+                    <td class="border border-yellow-200 px-2 py-1">{{ $scan->lot_no }}</td>
+                    <td class="border border-yellow-200 px-2 py-1">{{ number_format((int) $scan->qty_box) }}</td>
+                    <td class="border border-yellow-200 px-2 py-1">2nd Floor</td>
+                    <td class="border border-yellow-200 px-2 py-1">{{ optional($scan->scanned_at)->format('Y-m-d') ?? optional($scan->created_at)->format('Y-m-d') }}</td>
+                    <td class="border border-yellow-200 px-2 py-1">-</td>
+                    <td class="border border-yellow-200 px-2 py-1">-</td>
+                    <td class="border border-yellow-200 px-2 py-1">-</td>
+                    <td class="border border-yellow-200 px-2 py-1">{{ $scan->operator ? ($scan->operator->name) : '-' }}</td>
+                    <td class="border border-yellow-200 px-2 py-1">From SWA Plan</td>
+                </tr>
                 @empty
-                    <tr>
-                        <td colspan="12" class="border border-yellow-200 px-3 py-2 text-right text-gray-500">
-                            No record to view
-                        </td>
-                    </tr>
+                <tr>
+                    <td colspan="12" class="border border-yellow-200 px-3 py-2 text-center text-gray-500">
+                        No record to view
+                    </td>
+                </tr>
                 @endforelse
 
                 @if ($scans->count() > 0)
-                    <tr>
-                        <td colspan="12" class="border border-yellow-200 px-3 py-1 text-center text-gray-500">
-                            <div class="flex items-center justify-center gap-2">
-                                <a href="{{ $scans->onFirstPage() ? '#' : $scans->url(1) }}"
-                                    class="rounded border px-1 {{ $scans->onFirstPage() ? 'cursor-not-allowed bg-gray-100 text-gray-400' : 'bg-white text-gray-700' }}">
-                                    &laquo;
-                                </a>
-                                <a href="{{ $scans->onFirstPage() ? '#' : $scans->previousPageUrl() }}"
-                                    class="rounded border px-1 {{ $scans->onFirstPage() ? 'cursor-not-allowed bg-gray-100 text-gray-400' : 'bg-white text-gray-700' }}">
-                                    &lsaquo;
-                                </a>
-                                <span>Page {{ $scans->currentPage() }} of {{ $scans->lastPage() }}</span>
-                                <a href="{{ $scans->hasMorePages() ? $scans->nextPageUrl() : '#' }}"
-                                    class="rounded border px-1 {{ $scans->hasMorePages() ? 'bg-white text-gray-700' : 'cursor-not-allowed bg-gray-100 text-gray-400' }}">
-                                    &rsaquo;
-                                </a>
-                                <a href="{{ $scans->hasMorePages() ? $scans->url($scans->lastPage()) : '#' }}"
-                                    class="rounded border px-1 {{ $scans->hasMorePages() ? 'bg-white text-gray-700' : 'cursor-not-allowed bg-gray-100 text-gray-400' }}">
-                                    &raquo;
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
+                <tr>
+                    <td colspan="12" class="border border-yellow-200 px-3 py-1 text-center text-gray-500">
+                        <div class="flex items-center justify-center gap-2">
+                            <a href="{{ $scans->onFirstPage() ? '#' : $scans->url(1) }}"
+                                class="rounded border px-1 {{ $scans->onFirstPage() ? 'cursor-not-allowed bg-gray-100 text-gray-400' : 'bg-white text-gray-700' }}">
+                                &laquo;
+                            </a>
+                            <a href="{{ $scans->onFirstPage() ? '#' : $scans->previousPageUrl() }}"
+                                class="rounded border px-1 {{ $scans->onFirstPage() ? 'cursor-not-allowed bg-gray-100 text-gray-400' : 'bg-white text-gray-700' }}">
+                                &lsaquo;
+                            </a>
+                            <span>Page {{ $scans->currentPage() }} of {{ $scans->lastPage() }}</span>
+                            <a href="{{ $scans->hasMorePages() ? $scans->nextPageUrl() : '#' }}"
+                                class="rounded border px-1 {{ $scans->hasMorePages() ? 'bg-white text-gray-700' : 'cursor-not-allowed bg-gray-100 text-gray-400' }}">
+                                &rsaquo;
+                            </a>
+                            <a href="{{ $scans->hasMorePages() ? $scans->url($scans->lastPage()) : '#' }}"
+                                class="rounded border px-1 {{ $scans->hasMorePages() ? 'bg-white text-gray-700' : 'cursor-not-allowed bg-gray-100 text-gray-400' }}">
+                                &raquo;
+                            </a>
+                        </div>
+                    </td>
+                </tr>
                 @endif
             </tbody>
         </table>
@@ -218,7 +259,7 @@
             clearHint();
         };
 
-        const previewOperator = async() => {
+        const previewOperator = async () => {
             if (operatorInput.value.trim() === '') {
                 operatorInput.focus();
                 return false;
@@ -255,7 +296,7 @@
             }
         };
 
-        const previewPartCode = async() => {
+        const previewPartCode = async () => {
             if (partCode.value.trim() === '') {
                 partCode.focus();
                 return false;
@@ -294,7 +335,7 @@
             }
         };
 
-        const previewPlan = async() => {
+        const previewPlan = async () => {
             if (partCode.value.trim() === '') {
                 partCode.focus();
                 return false;
@@ -341,7 +382,7 @@
                 previewOperator();
             }
         });
-        operatorInput.addEventListener('keydown', async(event) => {
+        operatorInput.addEventListener('keydown', async (event) => {
             if (event.key !== 'Enter') return;
             event.preventDefault();
 
@@ -350,7 +391,7 @@
             partCode.focus();
         });
 
-        partCode.addEventListener('keydown', async(event) => {
+        partCode.addEventListener('keydown', async (event) => {
             if (event.key !== 'Enter') return;
             event.preventDefault();
 
@@ -378,7 +419,7 @@
             }
         });
 
-        lotInput.addEventListener('keydown', async(event) => {
+        lotInput.addEventListener('keydown', async (event) => {
             if (event.key !== 'Enter') return;
             event.preventDefault();
 

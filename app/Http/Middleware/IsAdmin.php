@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -11,9 +12,8 @@ class IsAdmin
     {
         $user = $request->user();
 
-        if (! $user || $user->role !== 'admin') {
-            // jika bukan admin, arahkan ke halaman dashboard atau 403
-            abort(403, 'Akses hanya untuk admin.');
+        if (! $user || $user->role !== User::ROLE_SUPER_ADMIN) {
+            abort(403, 'Akses hanya untuk super admin.');
         }
 
         return $next($request);

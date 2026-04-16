@@ -10,7 +10,7 @@
 <body class="min-h-screen bg-cover bg-center flex items-center justify-center"
     style="background-image: url('/images/bg.jpg');">
 
-    <div class="w-full max-w-md bg-[#0A1A2F]/90 backdrop-blur-md p-8 rounded-2xl shadow-xl">
+    <div class="w-full max-w-md rounded-2xl border border-white/30 bg-[#0A1A2F]/35 p-8 shadow-2xl backdrop-blur-sm">
 
         <div class="text-center mb-6">
             <img src="/images/logo.png" alt="Gapuro" class="w-20 mx-auto mb-2">
@@ -21,7 +21,7 @@
 
         <!-- ERROR LOGIN (username/password salah) -->
         @if (session('error'))
-        <div class="mb-4 px-4 py-3 rounded-md bg-red-500/80 text-white text-sm">
+        <div class="mb-4 rounded-md bg-red-500/70 px-4 py-3 text-sm text-white">
             {{ session('error') }}
         </div>
         @endif
@@ -32,15 +32,15 @@
             <div>
                 <input type="text" name="username"
                     placeholder="Enter your username"
-                    class="w-full px-4 py-2 rounded-md bg-white/90 border border-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400">
-                @error('username') <p class="mt-1 text-sm text-red-400">{{ $message }}</p> @enderror
+                    class="w-full rounded-md border border-white/40 bg-white/75 px-4 py-2 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                @error('username') <p class="mt-1 text-sm text-red-200">{{ $message }}</p> @enderror
             </div>
 
             <div>
                 <input type="password" name="password"
                     placeholder="Password"
-                    class="w-full px-4 py-2 rounded-md bg-white/90 border border-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400">
-                @error('password') <p class="mt-1 text-sm text-red-400">{{ $message }}</p> @enderror
+                    class="w-full rounded-md border border-white/40 bg-white/75 px-4 py-2 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                @error('password') <p class="mt-1 text-sm text-red-200">{{ $message }}</p> @enderror
             </div>
 
             <button type="submit"
@@ -50,8 +50,8 @@
 
             <div class="flex justify-end">
 
-                <a href="{{ route('register') }}" class="text-sm text-blue-400 hover:underline">
-                    Reset Password
+                <a href="{{ route('password.request') }}" class="text-sm text-blue-400 hover:underline">
+                    Forgot Password
                 </a>
             </div>
         </form>

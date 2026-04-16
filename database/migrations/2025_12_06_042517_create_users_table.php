@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('username')->unique();
-            $table->string('role')->default('admin');
+            $table->string('role')->default('leader');
             $table->string('status')->default('active');
 
             // Login & security

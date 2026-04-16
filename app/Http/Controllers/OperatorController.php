@@ -12,9 +12,13 @@ class OperatorController extends Controller
 {
     public function index(Request $request): View
     {
+        [$sortBy, $sortDir] = $this->resolveSort($request);
+
         $filters = [
             'keyword' => trim((string) $request->input('keyword', '')),
             'page_size' => max(1, min(100, (int) $request->input('page_size', 10))),
+            'sort_by' => $sortBy,
+            'sort_dir' => $sortDir,
         ];
 
         $query = Operator::query();
@@ -28,7 +32,8 @@ class OperatorController extends Controller
         }
 
         $operators = $query
-            ->latest('id')
+            ->orderBy($sortBy, $sortDir)
+            ->when($sortBy !== 'id', fn($builder) => $builder->orderByDesc('id'))
             ->paginate($filters['page_size'])
             ->withQueryString();
 
@@ -81,5 +86,26 @@ class OperatorController extends Controller
             'department' => $operator->department,
         ]);
     }
-}
 
+    private function resolveSort(Request $request): array
+    {
+        $sortableColumns = [
+            'created_at',
+            'employee_id',
+            'name',
+            'department',
+        ];
+
+        $sortBy = (string) $request->input('sort_by', 'created_at');
+        if (!in_array($sortBy, $sortableColumns, true)) {
+            $sortBy = 'created_at';
+        }
+
+        $sortDir = strtolower((string) $request->input('sort_dir', 'desc'));
+        if (!in_array($sortDir, ['asc', 'desc'], true)) {
+            $sortDir = 'desc';
+        }
+
+        return [$sortBy, $sortDir];
+    }
+}

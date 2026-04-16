@@ -6,18 +6,48 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>@yield('title','Gapuro System')</title>
     @vite(['resources/css/app.css','resources/js/app.js'])
+    <style>
+        #appShell {
+            --sidebar-expanded-width: 18rem;
+            --sidebar-collapsed-width: 4.5rem;
+        }
+
+        #sidebar {
+            width: var(--sidebar-expanded-width);
+            overflow-x: hidden;
+            transition: width 0.25s ease;
+        }
+
+        #appShell.sidebar-collapsed #sidebar {
+            width: var(--sidebar-collapsed-width);
+        }
+
+        #appShell.sidebar-collapsed .sidebar-hide-on-collapse {
+            display: none !important;
+        }
+
+        #appShell.sidebar-collapsed .sidebar-center-on-collapse {
+            justify-content: center;
+        }
+
+        #appShell.sidebar-collapsed .sidebar-item-on-collapse {
+            justify-content: center;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+    </style>
 </head>
 
 <body class="h-full bg-gray-100 text-gray-800">
 
-    <div class="min-h-screen flex">
+    <div id="appShell" class="min-h-screen flex">
         <!-- SIDEBAR -->
-        <aside id="sidebar" class="w-72 bg-gray-50 border-r border-gray-200">
+        <aside id="sidebar" class="sticky top-0 h-screen overflow-y-auto bg-gray-50 border-r border-gray-200">
             <!-- logo + hide menu -->
             <a href="{{ route('dashboard') }}">
-                <div class="px-4 py-3 flex items-center gap-3 border-b border-gray-200">
+                <div class="px-4 py-3 flex items-center gap-3 border-b border-gray-200 sidebar-center-on-collapse">
                     <img src="/images/logo.png" class="w-10 h-10" alt="Gapuro">
-                    <div>
+                    <div class="sidebar-hide-on-collapse">
                         <div class="text-sm font-bold text-yellow-500">GAPURO SYSTEM</div>
                         <div class="text-xs text-gray-500">Production Process</div>
                     </div>
@@ -26,9 +56,9 @@
 
             <!-- Hide Menu (checkbox style) -->
             <div class="px-4 py-2 border-b border-gray-200">
-                <label class="inline-flex items-center gap-2 cursor-pointer text-sm text-gray-600">
+                <label class="inline-flex items-center gap-2 cursor-pointer text-sm text-gray-600 sidebar-center-on-collapse">
                     <input id="chkHide" type="checkbox" class="form-checkbox" />
-                    <span class="ml-1">Hide Menu</span>
+                    <span class="ml-1 sidebar-hide-on-collapse">Hide Menu</span>
                 </label>
             </div>
 
@@ -37,7 +67,7 @@
 
                 {{-- Group: MOLDING System (yellow header) --}}
                 <div class="mb-3">
-                    <div class="px-3 py-2 bg-yellow-300 text-sm font-semibold text-gray-800 rounded-t-md">MOLDING System</div>
+                    <div class="px-3 py-2 bg-yellow-300 text-sm font-semibold text-gray-800 rounded-t-md sidebar-hide-on-collapse">MOLDING System</div>
 
                     <ul class="bg-white border border-t-0 border-gray-200 rounded-b-md overflow-hidden">
                         <!-- <li class="group">
@@ -52,15 +82,15 @@
                         </li> -->
 
                         <li class="border-t">
-                            <button data-material="materialcontrol" class="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-gray-100">
+                            <button data-material="materialcontrol" title="Material Control" class="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-gray-100 sidebar-item-on-collapse">
                                 <span class="flex items-center gap-2">
                                     <svg class="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                     </svg>
-                                    Material Control
+                                    <span class="sidebar-hide-on-collapse">Material Control</span>
                                 </span>
                             </button>
-                            <div id="acc-2" class="accordion-body hidden px-4 pb-3 text-sm text-gray-600">
+                            <div id="acc-2" class="accordion-body hidden px-4 pb-3 text-sm text-gray-600 sidebar-hide-on-collapse">
                                 <div class="py-1 hover:bg-gray-100">Material Receiving</div>
                                 <a href="{{ route('material.storage') }}" class="block py-1 hover:bg-gray-100">
                                     Material Storage
@@ -80,24 +110,37 @@
                         </li> -->
 
                         <li class="border-t">
-                            <button data-fg="finishgoods" class="w-full text-left px-4 py-3 flex items-center gap-2 hover:bg-gray-50">
+                            <button data-fg="finishgoods" title="Finish Goods Control" class="w-full text-left px-4 py-3 flex items-center gap-2 hover:bg-gray-50 sidebar-item-on-collapse">
                                 <svg class="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                 </svg>
-                                Finish Goods Control
+                                <span class="sidebar-hide-on-collapse">Finish Goods Control</span>
                             </button>
                         </li>
 
                         <li class="border-t">
-                            <a href="{{ route('operators.index') }}" class="block w-full px-4 py-3 hover:bg-gray-50">
+                            <a href="{{ route('operators.index') }}" title="Operator" class="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-gray-50 sidebar-item-on-collapse">
                                 <span class="flex items-center gap-2">
                                     <svg class="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                     </svg>
-                                    Operator
+                                    <span class="sidebar-hide-on-collapse">Operator</span>
                                 </span>
                             </a>
                         </li>
+
+                        @if (auth()->user()?->isSuperAdmin())
+                            <li class="border-t">
+                                <a href="{{ route('admin.users.index') }}" title="Manajemen Admin" class="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-gray-50 sidebar-item-on-collapse">
+                                    <span class="flex items-center gap-2">
+                                        <svg class="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                        <span class="sidebar-hide-on-collapse">Manajemen Admin</span>
+                                    </span>
+                                </a>
+                            </li>
+                        @endif
 
                         <!-- <li class="border-t">
                             <button data-accordion="acc-5" class="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-gray-50">
@@ -119,7 +162,7 @@
         <!-- MAIN CONTENT -->
         <div class="flex-1 flex flex-col">
             <!-- TOPBAR -->
-            <header class="flex items-center justify-between bg-white border-b border-gray-200 px-4 py-3">
+            <header class="sticky top-0 z-40 flex items-center justify-between bg-white border-b border-gray-200 px-4 py-3">
                 <div class="flex items-center gap-3">
                     <div class="text-sm text-gray-600">Current Period : <span class="font-medium text-gray-800">2025-10-01 - 2025-12-31</span></div>
                 </div>
@@ -142,6 +185,7 @@
                         <div class="text-right text-xs">
                             <div class="text-gray-500">Login : {{ now()->format('Y-m-d H:i') }}</div>
                             <div class="text-gray-700 font-medium">{{ auth()->user()->username ?? 'guest' }}</div>
+                            <div class="text-[11px] text-gray-500">{{ auth()->user()->role_label ?? '-' }}</div>
                         </div>
 
                         <!-- Avatar button -->
@@ -338,16 +382,137 @@
         });
 
         // Hide menu checkbox (collapse left bar)
-        document.getElementById('chkHide')?.addEventListener('change', function() {
-            const sb = document.getElementById('sidebar');
-            if (this.checked) {
-                sb.style.width = '48px';
-                sb.querySelectorAll('nav ul, nav .mb-3 > .px-3').forEach(n => n.style.display = 'none');
-            } else {
-                sb.style.width = '18rem';
-                sb.querySelectorAll('nav ul, nav .mb-3 > .px-3').forEach(n => n.style.display = '');
+        const shell = document.getElementById('appShell');
+        const sidebarToggle = document.getElementById('chkHide');
+        const sidebarStateKey = 'gapuro_sidebar_collapsed';
+
+        function applySidebarCollapsed(collapsed) {
+            if (!shell) return;
+
+            shell.classList.toggle('sidebar-collapsed', collapsed);
+            if (sidebarToggle) {
+                sidebarToggle.checked = collapsed;
+            }
+
+            // Close flyout when sidebar changes state.
+            if (collapsed && fly) {
+                fly.classList.add('hidden');
+            }
+        }
+
+        const savedSidebarState = localStorage.getItem(sidebarStateKey);
+        if (savedSidebarState === '1' || savedSidebarState === '0') {
+            applySidebarCollapsed(savedSidebarState === '1');
+        } else {
+            applySidebarCollapsed(false);
+        }
+
+        sidebarToggle?.addEventListener('change', function() {
+            const collapsed = Boolean(this.checked);
+            applySidebarCollapsed(collapsed);
+            localStorage.setItem(sidebarStateKey, collapsed ? '1' : '0');
+        });
+
+        // Client-side table sorting for static/mock pages.
+        document.querySelectorAll('table[data-client-sort="true"]').forEach((table) => {
+            const tbody = table.tBodies[0];
+            if (!tbody) return;
+
+            const headers = Array.from(table.querySelectorAll('thead th'));
+            headers.forEach((th) => {
+                if (th.dataset.sortable === 'false') return;
+
+                th.classList.add('cursor-pointer');
+                th.addEventListener('click', () => {
+                    const colIndex = th.cellIndex;
+                    const currentIndex = Number(table.dataset.sortIndex ?? '-1');
+                    const currentDir = table.dataset.sortDir === 'asc' ? 'asc' : 'desc';
+                    const nextDir = currentIndex === colIndex && currentDir === 'asc' ? 'desc' : 'asc';
+                    sortTableRows(tbody, colIndex, nextDir);
+                    table.dataset.sortIndex = String(colIndex);
+                    table.dataset.sortDir = nextDir;
+                });
+            });
+
+            const defaultIndex = Number(table.dataset.defaultSortIndex ?? '-1');
+            const defaultDir = table.dataset.defaultSortDir === 'asc' ? 'asc' : 'desc';
+            if (defaultIndex >= 0) {
+                sortTableRows(tbody, defaultIndex, defaultDir);
+                table.dataset.sortIndex = String(defaultIndex);
+                table.dataset.sortDir = defaultDir;
             }
         });
+
+        function sortTableRows(tbody, colIndex, direction) {
+            const allRows = Array.from(tbody.querySelectorAll('tr'));
+            const dataRows = [];
+            const nonDataRows = [];
+
+            allRows.forEach((row) => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length === 0) {
+                    nonDataRows.push(row);
+                    return;
+                }
+
+                if (cells.length === 1 && cells[0].hasAttribute('colspan')) {
+                    nonDataRows.push(row);
+                    return;
+                }
+
+                dataRows.push(row);
+            });
+
+            dataRows.sort((leftRow, rightRow) => {
+                const leftText = normalizeSortText(leftRow.cells[colIndex]?.innerText ?? '');
+                const rightText = normalizeSortText(rightRow.cells[colIndex]?.innerText ?? '');
+
+                const leftNumber = toNumber(leftText);
+                const rightNumber = toNumber(rightText);
+                if (leftNumber !== null && rightNumber !== null) {
+                    return direction === 'asc' ? leftNumber - rightNumber : rightNumber - leftNumber;
+                }
+
+                const leftDate = toDate(leftText);
+                const rightDate = toDate(rightText);
+                if (leftDate !== null && rightDate !== null) {
+                    return direction === 'asc' ? leftDate - rightDate : rightDate - leftDate;
+                }
+
+                const compare = leftText.localeCompare(rightText, undefined, {
+                    numeric: true,
+                    sensitivity: 'base',
+                });
+
+                return direction === 'asc' ? compare : -compare;
+            });
+
+            dataRows.forEach((row) => tbody.appendChild(row));
+            nonDataRows.forEach((row) => tbody.appendChild(row));
+        }
+
+        function normalizeSortText(value) {
+            return String(value).replace(/\\s+/g, ' ').trim();
+        }
+
+        function toNumber(value) {
+            const cleaned = value.replace(/,/g, '');
+            if (!/^-?\\d+(\\.\\d+)?$/.test(cleaned)) {
+                return null;
+            }
+
+            const numberValue = Number(cleaned);
+            return Number.isNaN(numberValue) ? null : numberValue;
+        }
+
+        function toDate(value) {
+            if (!/^\\d{4}-\\d{2}-\\d{2}(\\s+\\d{2}:\\d{2}(:\\d{2})?)?$/.test(value)) {
+                return null;
+            }
+
+            const dateValue = Date.parse(value.replace(' ', 'T'));
+            return Number.isNaN(dateValue) ? null : dateValue;
+        }
 
         // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {

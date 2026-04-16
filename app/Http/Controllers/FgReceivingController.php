@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\FgDeliveryScan;
 use App\Models\FgReceivingScan;
 use App\Models\FgSwaPlan;
 use App\Models\Operator;
@@ -19,6 +20,11 @@ class FgReceivingController extends Controller
     public function index(Request $request): View
     {
         $today = now()->format('Y-m-d');
+        [$sortBy, $sortDir] = $this->resolveSort(
+            $request,
+            ['scanned_at', 'part_code', 'part_name', 'lot_no', 'qty_box', 'created_at'],
+            'scanned_at'
+        );
 
         $filters = [
             'date_from' => (string) $request->input('date_from', $today),
@@ -26,13 +32,16 @@ class FgReceivingController extends Controller
             'search_by' => (string) $request->input('search_by', ''),
             'keyword' => trim((string) $request->input('keyword', '')),
             'page_size' => max(1, min(100, (int) $request->input('page_size', 10))),
+            'sort_by' => $sortBy,
+            'sort_dir' => $sortDir,
         ];
 
         $page = max(1, (int) $request->input('page', 1));
         $filteredQuery = $this->buildReceivingQuery($request);
 
         $scans = (clone $filteredQuery)
-            ->latest('id')
+            ->orderBy($sortBy, $sortDir)
+            ->when($sortBy !== 'id', fn($query) => $query->orderByDesc('id'))
             ->paginate($filters['page_size'], ['*'], 'page', $page)
             ->withQueryString();
 
@@ -46,9 +55,17 @@ class FgReceivingController extends Controller
 
     public function createUnregistered(Request $request): View
     {
+        [$sortBy, $sortDir] = $this->resolveSort(
+            $request,
+            ['scanned_at', 'part_code', 'part_name', 'lot_no', 'qty_box', 'created_at'],
+            'scanned_at'
+        );
+
         $filters = [
             'receiving_date' => (string) $request->input('receiving_date', now()->format('Y-m-d')),
             'page_size' => max(1, min(100, (int) $request->input('page_size', 10))),
+            'sort_by' => $sortBy,
+            'sort_dir' => $sortDir,
         ];
         $defaultPartCode = trim((string) $request->query('part_code', ''));
         $defaultOperatorEmployeeId = trim((string) $request->query('operator_employee_id', ''));
@@ -69,11 +86,12 @@ class FgReceivingController extends Controller
             ->with('operator')
             ->whereIn('id', $scanIds);
         $scans = (clone $query)
-            ->latest('id')
+            ->orderBy($sortBy, $sortDir)
+            ->when($sortBy !== 'id', fn($builder) => $builder->orderByDesc('id'))
             ->paginate($filters['page_size'], ['*'], 'page', $page)
             ->withQueryString();
 
-        $totalCount = count($scanIds);
+        $totalCount = (clone $query)->count();
 
         return view('fg-storage.receiving-unregistered', compact('filters', 'scans', 'totalCount', 'defaultPartCode', 'defaultOperatorEmployeeId'));
     }
@@ -97,6 +115,47 @@ class FgReceivingController extends Controller
             return back()
                 ->withErrors(['operator_employee_id' => 'Nomor ID operator tidak ditemukan.'])
                 ->withInput();
+        }
+
+        $deliveryScan = $this->findDeliveryScanByPartAndLot($partCode, $lotNo);
+        if ($deliveryScan !== null) {
+            if ($this->isDuplicateLotScan($partCode, $lotNo)) {
+                return back()
+                    ->withErrors(['lot_no' => 'Lot No ini sudah ada di FG Receiving.'])
+                    ->withInput();
+            }
+
+            $scan = FgReceivingScan::query()->create([
+                'label_id' => $deliveryScan->label_id,
+                'part_code' => $deliveryScan->part_code,
+                'part_name' => $deliveryScan->part_name,
+                'lot_no' => $deliveryScan->lot_no,
+                'qty_box' => (int) $deliveryScan->qty_box,
+                'scanned_at' => $this->isDateString($receivingDate) ? $receivingDate . ' ' . now()->format('H:i:s') : now(),
+                'created_by' => $request->user()?->id,
+                'operator_id' => $operator->id,
+            ]);
+
+            $deliveryScan->delete();
+
+            $scanIds = collect((array) $request->session()->get(self::UNREGISTERED_SCAN_IDS_SESSION_KEY, []))
+                ->map(fn($id) => (int) $id)
+                ->filter(fn(int $id) => $id > 0)
+                ->push((int) $scan->id)
+                ->unique()
+                ->values()
+                ->all();
+
+            $request->session()->put(self::UNREGISTERED_SCAN_IDS_SESSION_KEY, $scanIds);
+
+            return redirect()
+                ->route('fg.storage.receiving.create-unregistered', [
+                    'receiving_date' => $receivingDate,
+                    'carry' => 1,
+                    'part_code' => $scan->part_code,
+                    'operator_employee_id' => $operator->employee_id,
+                ])
+                ->with('success', 'Pembatalan pengiriman berhasil. Barang dikembalikan ke FG Receiving.');
         }
 
         [$selectedPlan, $errorMessage] = $this->resolvePlanForScan($partCode, $lotNo);
@@ -162,6 +221,18 @@ class FgReceivingController extends Controller
             ], 422);
         }
 
+        $deliveryScan = $this->findDeliveryScanByPartAndLot($partCode, $lotNo);
+        if ($deliveryScan !== null) {
+            return response()->json([
+                'part_code' => $deliveryScan->part_code,
+                'part_name' => $deliveryScan->part_name,
+                'lot_no' => $deliveryScan->lot_no,
+                'qty_box' => (int) $deliveryScan->qty_box,
+                'message' => 'Lot ini ada di FG Delivery. Submit untuk pembatalan pengiriman dan kembalikan ke FG Receiving.',
+                'action' => 'CANCEL_DELIVERY',
+            ]);
+        }
+
         [$plan, $errorMessage] = $this->resolvePlanForScan($partCode, $lotNo);
         if ($plan === null) {
             return response()->json([
@@ -203,22 +274,33 @@ class FgReceivingController extends Controller
         }
 
         [$plan, $errorMessage] = $this->resolvePlanByPartCode($partCode);
-        if ($plan === null) {
+        if ($plan !== null) {
+            $currentTotalScan = $this->calculateTotalScanForPlan($plan);
+
             return response()->json([
-                'message' => $errorMessage ?? 'Part Code belum terdaftar pada plan.',
-            ], 422);
+                'part_code' => $plan->part_code,
+                'part_name' => $plan->part_name,
+                'qty_box' => (int) $plan->qty_box,
+                'total_plan' => (int) $plan->total_plan,
+                'total_scan' => $currentTotalScan,
+                'remaining_plan' => max(0, (int) $plan->total_plan - $currentTotalScan),
+            ]);
         }
 
-        $currentTotalScan = $this->calculateTotalScanForPlan($plan);
+        $deliveryScan = $this->findDeliveryScanByPartCode($partCode);
+        if ($deliveryScan !== null) {
+            return response()->json([
+                'part_code' => $deliveryScan->part_code,
+                'part_name' => $deliveryScan->part_name,
+                'qty_box' => (int) $deliveryScan->qty_box,
+                'message' => 'Part ditemukan di FG Delivery. Lanjut scan Lot No untuk pembatalan pengiriman.',
+                'source' => 'delivery',
+            ]);
+        }
 
         return response()->json([
-            'part_code' => $plan->part_code,
-            'part_name' => $plan->part_name,
-            'qty_box' => (int) $plan->qty_box,
-            'total_plan' => (int) $plan->total_plan,
-            'total_scan' => $currentTotalScan,
-            'remaining_plan' => max(0, (int) $plan->total_plan - $currentTotalScan),
-        ]);
+            'message' => $errorMessage ?? 'Part Code belum terdaftar pada plan.',
+        ], 422);
     }
 
     private function buildReceivingQuery(Request $request)
@@ -387,6 +469,43 @@ class FgReceivingController extends Controller
         return strtoupper((string) preg_replace('/[^A-Z0-9\-]/i', '', trim($value)));
     }
 
+    private function normalizeCode(string $value): string
+    {
+        return strtoupper((string) preg_replace('/[^A-Z0-9]/i', '', trim($value)));
+    }
+
+    private function findDeliveryScanByPartCode(string $partCode): ?FgDeliveryScan
+    {
+        $normalizedPartCode = $this->normalizeCode($partCode);
+        if ($normalizedPartCode === '') {
+            return null;
+        }
+
+        return FgDeliveryScan::query()
+            ->orderByDesc('id')
+            ->get()
+            ->first(function (FgDeliveryScan $scan) use ($normalizedPartCode) {
+                return $this->normalizeCode((string) $scan->part_code) === $normalizedPartCode;
+            });
+    }
+
+    private function findDeliveryScanByPartAndLot(string $partCode, string $lotNo): ?FgDeliveryScan
+    {
+        $normalizedPartCode = $this->normalizeCode($partCode);
+        $normalizedLot = $this->normalizeLot($lotNo);
+        if ($normalizedPartCode === '' || $normalizedLot === '') {
+            return null;
+        }
+
+        return FgDeliveryScan::query()
+            ->orderByDesc('id')
+            ->get()
+            ->first(function (FgDeliveryScan $scan) use ($normalizedPartCode, $normalizedLot) {
+                return $this->normalizeCode((string) $scan->part_code) === $normalizedPartCode
+                    && $this->normalizeLot((string) $scan->lot_no) === $normalizedLot;
+            });
+    }
+
     private function isDateString(string $date): bool
     {
         if ($date === '') {
@@ -406,5 +525,20 @@ class FgReceivingController extends Controller
         $monthNumber = "(CASE WHEN $monthCode REGEXP '^[1-9]$' THEN CAST($monthCode AS UNSIGNED) WHEN $monthCode = 'A' THEN 10 WHEN $monthCode = 'B' THEN 11 WHEN $monthCode = 'C' THEN 12 ELSE NULL END)";
 
         return "STR_TO_DATE(CONCAT($yearNumber, '-', LPAD($monthNumber, 2, '0'), '-', LPAD($dayCode, 2, '0')), '%Y-%m-%d')";
+    }
+
+    private function resolveSort(Request $request, array $sortableColumns, string $defaultColumn): array
+    {
+        $sortBy = (string) $request->input('sort_by', $defaultColumn);
+        if (!in_array($sortBy, $sortableColumns, true)) {
+            $sortBy = $defaultColumn;
+        }
+
+        $sortDir = strtolower((string) $request->input('sort_dir', 'desc'));
+        if (!in_array($sortDir, ['asc', 'desc'], true)) {
+            $sortDir = 'desc';
+        }
+
+        return [$sortBy, $sortDir];
     }
 }

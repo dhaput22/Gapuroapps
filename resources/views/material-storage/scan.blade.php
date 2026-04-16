@@ -50,7 +50,7 @@
     </div>
 
     <div class="overflow-x-auto rounded border border-yellow-300">
-        <table class="min-w-full border-collapse text-xs">
+        <table class="min-w-full border-collapse text-xs" data-client-sort="true" data-default-sort-index="1" data-default-sort-dir="desc">
             <thead class="bg-yellow-200 text-gray-700">
                 <tr>
                     <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Label ID</th>

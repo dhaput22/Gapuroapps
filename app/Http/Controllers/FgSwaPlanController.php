@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\FgDeliveryScan;
 use App\Models\FgReceivingScan;
 use App\Models\FgSwaPlan;
 use Illuminate\Http\RedirectResponse;
@@ -15,6 +16,7 @@ class FgSwaPlanController extends Controller
     public function index(Request $request): View
     {
         $today = now()->format('Y-m-d');
+        [$sortBy, $sortDir] = $this->resolveSort($request);
 
         $filters = [
             'date_filter' => (string) $request->input('date_filter', 'created_at'),
@@ -23,13 +25,16 @@ class FgSwaPlanController extends Controller
             'search_by' => (string) $request->input('search_by', ''),
             'keyword' => trim((string) $request->input('keyword', '')),
             'page_size' => max(1, min(100, (int) $request->input('page_size', 10))),
+            'sort_by' => $sortBy,
+            'sort_dir' => $sortDir,
         ];
 
         $page = max(1, (int) $request->input('page', $request->input('page_no', 1)));
         $filteredQuery = $this->buildFilteredPlanQuery($request);
 
         $plans = (clone $filteredQuery)
-            ->latest('id')
+            ->orderBy($sortBy, $sortDir)
+            ->when($sortBy !== 'id', fn($query) => $query->orderByDesc('id'))
             ->paginate($filters['page_size'], ['*'], 'page', $page)
             ->withQueryString();
 
@@ -71,8 +76,10 @@ class FgSwaPlanController extends Controller
             ->with('success', 'Plan FG for SWA berhasil ditambahkan.');
     }
 
-    public function edit(FgSwaPlan $plan): View
+    public function edit(Request $request, FgSwaPlan $plan): View
     {
+        $this->ensureWarehouseMutationPermission($request);
+
         return view('fg-storage.swa-form', [
             'plan' => $plan,
             'mode' => 'edit',
@@ -83,6 +90,8 @@ class FgSwaPlanController extends Controller
 
     public function update(Request $request, FgSwaPlan $plan): RedirectResponse
     {
+        $this->ensureWarehouseMutationPermission($request);
+
         $validated = $this->validatePlanPayload($request, $plan->id);
 
         $plan->update($validated);
@@ -92,8 +101,10 @@ class FgSwaPlanController extends Controller
             ->with('success', 'Plan FG for SWA berhasil diperbarui.');
     }
 
-    public function destroy(FgSwaPlan $plan): RedirectResponse
+    public function destroy(Request $request, FgSwaPlan $plan): RedirectResponse
     {
+        $this->ensureWarehouseMutationPermission($request);
+
         $plan->delete();
 
         return redirect()
@@ -202,12 +213,48 @@ class FgSwaPlanController extends Controller
             ->unique()
             ->values();
 
-        $scansByPart = FgReceivingScan::query()
+        $receivingRows = FgReceivingScan::query()
             ->whereIn('part_code', $planPartCodes)
             ->selectRaw('part_code, lot_no, SUM(qty_box) as total_qty')
             ->groupBy('part_code', 'lot_no')
-            ->get()
-            ->groupBy(fn(FgReceivingScan $scan) => $this->normalizeLot((string) $scan->part_code));
+            ->get();
+
+        $deliveryRows = FgDeliveryScan::query()
+            ->whereIn('part_code', $planPartCodes)
+            ->selectRaw('part_code, lot_no, SUM(qty_box) as total_qty')
+            ->groupBy('part_code', 'lot_no')
+            ->get();
+
+        $combinedRows = $receivingRows->concat($deliveryRows);
+        $aggregatedByPartLot = [];
+        foreach ($combinedRows as $scan) {
+            $partKey = $this->normalizeLot((string) $scan->part_code);
+            $lotKey = $this->normalizeLot((string) $scan->lot_no);
+            if ($partKey === '' || $lotKey === '') {
+                continue;
+            }
+
+            $key = $partKey . '|' . $lotKey;
+            if (!isset($aggregatedByPartLot[$key])) {
+                $aggregatedByPartLot[$key] = [
+                    'part_key' => $partKey,
+                    'lot_no' => (string) $scan->lot_no,
+                    'total_qty' => 0,
+                ];
+            }
+            $aggregatedByPartLot[$key]['total_qty'] += (int) $scan->total_qty;
+        }
+
+        $scansByPart = collect($aggregatedByPartLot)
+            ->groupBy('part_key')
+            ->map(function (Collection $rows) {
+                return $rows->map(function (array $row) {
+                    return (object) [
+                        'lot_no' => $row['lot_no'],
+                        'total_qty' => $row['total_qty'],
+                    ];
+                })->values();
+            });
 
         $plans->transform(function (FgSwaPlan $plan) use ($scansByPart) {
             $partKey = $this->normalizeLot($plan->part_code);
@@ -309,5 +356,37 @@ class FgSwaPlanController extends Controller
         $monthNumber = "(CASE WHEN $monthCode REGEXP '^[1-9]$' THEN CAST($monthCode AS UNSIGNED) WHEN $monthCode = 'A' THEN 10 WHEN $monthCode = 'B' THEN 11 WHEN $monthCode = 'C' THEN 12 ELSE NULL END)";
 
         return "STR_TO_DATE(CONCAT($yearNumber, '-', LPAD($monthNumber, 2, '0'), '-', LPAD($dayCode, 2, '0')), '%Y-%m-%d')";
+    }
+
+    private function resolveSort(Request $request): array
+    {
+        $sortableColumns = [
+            'created_at',
+            'part_code',
+            'part_name',
+            'start_lot_no',
+            'end_lot_no',
+            'qty_box',
+            'total_plan',
+        ];
+
+        $sortBy = (string) $request->input('sort_by', 'created_at');
+        if (!in_array($sortBy, $sortableColumns, true)) {
+            $sortBy = 'created_at';
+        }
+
+        $sortDir = strtolower((string) $request->input('sort_dir', 'desc'));
+        if (!in_array($sortDir, ['asc', 'desc'], true)) {
+            $sortDir = 'desc';
+        }
+
+        return [$sortBy, $sortDir];
+    }
+
+    private function ensureWarehouseMutationPermission(Request $request): void
+    {
+        if (!$request->user()?->canManageWarehouseData()) {
+            abort(403, 'Role Anda tidak diizinkan untuk edit/hapus data gudang.');
+        }
     }
 }
