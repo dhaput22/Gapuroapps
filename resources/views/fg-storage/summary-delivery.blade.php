@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'FG Receiving')
+@section('title', 'Summary Delivery')
 
 @section('content')
 <div class="space-y-4 text-[13px] text-gray-700">
@@ -29,65 +29,36 @@
     </div>
     @endif
 
-    @php
-    $currentSortBy = $filters['sort_by'] ?? 'scanned_at';
-    $currentSortDir = strtolower($filters['sort_dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
-
-    $sortUrl = static function (string $column) use ($filters, $currentSortBy, $currentSortDir): string {
-    $nextDirection = $currentSortBy === $column && $currentSortDir === 'asc' ? 'desc' : 'asc';
-
-    $query = [
-    'date_from' => $filters['date_from'] ?? null,
-    'date_to' => $filters['date_to'] ?? null,
-    'search_by' => $filters['search_by'] ?? null,
-    'keyword' => $filters['keyword'] ?? null,
-    'page_size' => $filters['page_size'] ?? null,
-    'sort_by' => $column,
-    'sort_dir' => $nextDirection,
-    ];
-
-    $query = array_filter($query, static fn($value) => $value !== null && $value !== '');
-
-    return route('fg.storage.receiving', $query);
-    };
-    @endphp
-
-    <form method="GET" action="{{ route('fg.storage.receiving') }}" class="rounded border border-gray-200 bg-gray-100 px-4 py-3">
-        <input type="hidden" name="sort_by" value="{{ $currentSortBy }}">
-        <input type="hidden" name="sort_dir" value="{{ $currentSortDir }}">
+    {{-- Filter --}}
+    <form method="GET" action="{{ route('fg.storage.summary-delivery') }}"
+        class="rounded border border-gray-200 bg-gray-100 px-4 py-3">
 
         <div class="mb-2 flex flex-wrap items-center gap-2">
             <span class="w-20 text-gray-600">Date Filter</span>
 
-            <select class="h-9 rounded border border-yellow-400 bg-yellow-300 px-2 pr-8 text-sm">
-                <option>Date Injection</option>
-            </select>
-
-            <input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}"
+            <input type="date" name="date_from" value="{{ $filters['date_from'] }}"
                 class="h-9 rounded border border-gray-300 bg-white px-2 text-sm">
 
             <span class="text-xs text-gray-500">To</span>
 
-            <input type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}"
+            <input type="date" name="date_to" value="{{ $filters['date_to'] }}"
                 class="h-9 rounded border border-gray-300 bg-white px-2 text-sm">
 
             <span class="ml-4 text-gray-600">Search By</span>
 
             <select name="search_by" class="h-9 rounded border border-yellow-400 bg-yellow-300 px-2 pr-8 text-sm">
                 <option value="">Search By</option>
-                <option value="part_code" {{ ($filters['search_by'] ?? '') === 'part_code' ? 'selected' : '' }}>Part Code</option>
-                <option value="part_name" {{ ($filters['search_by'] ?? '') === 'part_name' ? 'selected' : '' }}>Part Name</option>
-                <option value="lot_no" {{ ($filters['search_by'] ?? '') === 'lot_no' ? 'selected' : '' }}>Lot No</option>
-                <option value="label_id" {{ ($filters['search_by'] ?? '') === 'label_id' ? 'selected' : '' }}>Label ID</option>
+                <option value="part_code" {{ $filters['search_by'] === 'part_code' ? 'selected' : '' }}>Part Code</option>
+                <option value="part_name" {{ $filters['search_by'] === 'part_name' ? 'selected' : '' }}>Part Name</option>
             </select>
 
-            <input type="text" name="keyword" value="{{ $filters['keyword'] ?? '' }}" placeholder="Input Keyword"
+            <input type="text" name="keyword" value="{{ $filters['keyword'] }}" placeholder="Input Keyword"
                 class="h-9 w-44 rounded border border-gray-300 bg-white px-2 text-sm">
 
             <button type="submit" class="h-9 rounded bg-yellow-400 px-3 text-xs font-semibold text-gray-800 hover:bg-yellow-500">
                 Search
             </button>
-            <a href="{{ route('fg.storage.receiving') }}"
+            <a href="{{ route('fg.storage.summary-delivery') }}"
                 class="h-9 rounded border border-gray-300 bg-white px-3 py-2 text-xs text-gray-700">
                 Reset
             </a>
@@ -95,10 +66,10 @@
 
         <div class="flex flex-wrap items-center gap-2">
             <span class="w-20 text-gray-600">Total Row</span>
-            <input type="text" readonly value="{{ $summary['total_row'] ?? 0 }}" class="h-7 w-12 rounded border border-gray-300 bg-white px-2 text-sm">
+            <input type="text" readonly value="{{ $summary['total_row'] }}" class="h-7 w-12 rounded border border-gray-300 bg-white px-2 text-sm">
 
             <span class="ml-3 text-gray-600">Page Size</span>
-            <input type="number" min="1" max="100" name="page_size" value="{{ $filters['page_size'] ?? 10 }}"
+            <input type="number" min="1" max="100" name="page_size" value="{{ $filters['page_size'] }}"
                 class="h-7 w-12 rounded border border-gray-300 bg-white px-2 text-sm">
 
             <span class="ml-3 text-gray-600">Page No</span>
@@ -107,27 +78,49 @@
 
             <button type="submit" class="h-7 rounded bg-yellow-400 px-2 text-xs text-gray-800">Apply</button>
             <div class="ml-3 text-xs text-gray-600">
-                Total Qty Scan : <strong>{{ number_format($summary['total_qty'] ?? 0) }}</strong>
+                Total Qty : <strong>{{ number_format($summary['total_qty']) }}</strong>
             </div>
         </div>
     </form>
 
+    {{-- Tab Navigation --}}
     <div class="flex flex-wrap gap-1 text-sm">
-        <a href="{{ route('fg.storage.receiving') }}" class="rounded border border-yellow-500 bg-yellow-300 px-3 py-2 font-semibold text-gray-800">FG Receiving</a>
+        <a href="{{ route('fg.storage.receiving') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG Receiving</a>
         <a href="{{ route('fg.storage.return.index') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG Return</a>
         <a href="{{ route('fg.storage') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG Delivery</a>
         <a href="{{ route('fg.storage.stock') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG Stock</a>
         <a href="{{ route('fg.storage.swa') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG for SWA</a>
         <a href="{{ route('fg.storage.dispose.index') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG Dispose</a>
         <a href="{{ route('fg.storage.summary-stock') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">Summary Stock</a>
-        <a href="{{ route('fg.storage.summary-delivery') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">Summary Delivery</a>
+        <a href="{{ route('fg.storage.summary-delivery') }}" class="rounded border border-yellow-500 bg-yellow-300 px-3 py-2 font-semibold text-gray-800">Summary Delivery</a>
     </div>
 
-    <div class="flex flex-wrap gap-2">
-        <a href="{{ route('fg.storage.receiving.create-unregistered') }}" class="rounded border border-yellow-500 bg-yellow-300 px-2 py-1 text-sm font-medium text-gray-800">
-            Create Unregistered
-        </a>
+    {{-- Action: Download Excel --}}
+    <div class="flex flex-wrap items-center gap-2">
+        <form method="GET" action="{{ route('fg.storage.summary-delivery.export') }}" class="flex items-center gap-2">
+            <input type="hidden" name="date_from" value="{{ $filters['date_from'] }}">
+            <input type="hidden" name="date_to" value="{{ $filters['date_to'] }}">
+            <input type="hidden" name="search_by" value="{{ $filters['search_by'] }}">
+            <input type="hidden" name="keyword" value="{{ $filters['keyword'] }}">
+            <input type="hidden" name="sort_by" value="{{ $filters['sort_by'] }}">
+            <input type="hidden" name="sort_dir" value="{{ $filters['sort_dir'] }}">
+            <button type="submit"
+                class="rounded border border-green-600 bg-green-500 px-3 py-1 text-sm font-medium text-white hover:bg-green-600">
+                Download Excel
+            </button>
+        </form>
     </div>
+
+    @php
+    $currentSortBy = $filters['sort_by'] ?? 'delivery_date';
+    $currentSortDir = strtolower($filters['sort_dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+
+    $sortUrl = static function (string $column) use ($filters, $currentSortBy, $currentSortDir): string {
+    $nextDirection = $currentSortBy === $column && $currentSortDir === 'asc' ? 'desc' : 'asc';
+    $query = array_merge($filters, ['sort_by' => $column, 'sort_dir' => $nextDirection]);
+    return route('fg.storage.summary-delivery', array_filter($query, fn($v) => $v !== null && $v !== ''));
+    };
+    @endphp
 
     <div class="overflow-x-auto rounded border border-yellow-300">
         <table class="min-w-full border-collapse text-xs">
@@ -135,7 +128,7 @@
                 <tr>
                     <th class="w-8 border border-yellow-300 px-2 py-2 text-center">No</th>
                     <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">
-                        <a href="{{ $sortUrl('scanned_at') }}" class="hover:underline">Injection Date</a>
+                        <a href="{{ $sortUrl('delivery_date') }}" class="hover:underline">Delivery Date</a>
                     </th>
                     <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">
                         <a href="{{ $sortUrl('part_code') }}" class="hover:underline">Part Code</a>
@@ -143,59 +136,27 @@
                     <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">
                         <a href="{{ $sortUrl('part_name') }}" class="hover:underline">Part Name</a>
                     </th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">RFID Decimal Tag</th>
                     <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">
-                        <a href="{{ $sortUrl('lot_no') }}" class="hover:underline">Lot No</a>
+                        <a href="{{ $sortUrl('total_scan') }}" class="hover:underline">Total Scan</a>
                     </th>
                     <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">
-                        <a href="{{ $sortUrl('qty_box') }}" class="hover:underline">Qty</a>
+                        <a href="{{ $sortUrl('total_qty') }}" class="hover:underline">Total Qty</a>
                     </th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">Storage</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">
-                        <a href="{{ $sortUrl('scanned_at') }}" class="hover:underline">Storage Date</a>
-                    </th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">Delivery</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">Delivery Date</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">QC Status</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">Receive By</th>
-                    @if(auth()->user()?->isAdmin())
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">Action</th>
-                    @endif
                 </tr>
             </thead>
             <tbody class="bg-yellow-50">
                 @forelse ($scans as $scan)
                 <tr>
                     <td class="border border-yellow-200 px-2 py-1 text-center">{{ ($scans->firstItem() ?? 0) + $loop->index }}</td>
-                    <td class="border border-yellow-200 px-2 py-1">{{ optional($scan->scanned_at)->format('Y-m-d') ?? optional($scan->created_at)->format('Y-m-d') }}</td>
+                    <td class="border border-yellow-200 px-2 py-1">{{ $scan->delivery_date }}</td>
                     <td class="border border-yellow-200 px-2 py-1">{{ $scan->part_code }}</td>
-                    <td class="border border-yellow-200 px-2 py-1">{{ $scan->part_name }}</td>
-                    <td class="border border-yellow-200 px-2 py-1">{{ $scan->label_id ?: '-' }}</td>
-                    <td class="border border-yellow-200 px-2 py-1">{{ $scan->lot_no }}</td>
-                    <td class="border border-yellow-200 px-2 py-1">{{ number_format((int) $scan->qty_box) }}</td>
-                    <td class="border border-yellow-200 px-2 py-1">2nd Floor</td>
-                    <td class="border border-yellow-200 px-2 py-1">{{ optional($scan->scanned_at)->format('Y-m-d') ?? optional($scan->created_at)->format('Y-m-d') }}</td>
-                    <td class="border border-yellow-200 px-2 py-1">-</td>
-                    <td class="border border-yellow-200 px-2 py-1">-</td>
-                    <td class="border border-yellow-200 px-2 py-1">-</td>
-                    <td class="border border-yellow-200 px-2 py-1">{{ $scan->operator ? ($scan->operator->name) : '-' }}</td>
-                    @if(auth()->user()?->isAdmin())
-                    <td class="border border-yellow-200 px-2 py-1 text-center">
-                        <div class="flex items-center justify-center gap-1">
-                            <a href="{{ route('fg.storage.receiving.edit', $scan) }}"
-                                class="rounded bg-blue-50 border border-blue-300 px-2 py-0.5 text-[11px] text-blue-700 hover:bg-blue-100">Edit</a>
-                            <form method="POST" action="{{ route('fg.storage.receiving.destroy', $scan) }}"
-                                onsubmit="return confirm('Yakin ingin menghapus data ini?')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="rounded bg-red-50 border border-red-300 px-2 py-0.5 text-[11px] text-red-700 hover:bg-red-100">Hapus</button>
-                            </form>
-                        </div>
-                    </td>
-                    @endif
+                    <td class="border border-yellow-200 px-2 py-1">{{ $scan->part_name ?? '-' }}</td>
+                    <td class="border border-yellow-200 px-2 py-1 text-right">{{ number_format($scan->total_scan) }}</td>
+                    <td class="border border-yellow-200 px-2 py-1 text-right">{{ number_format($scan->total_qty) }}</td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="{{ auth()->user()?->isAdmin() ? 14 : 13 }}" class="border border-yellow-200 px-3 py-4 text-center text-gray-500">
+                    <td colspan="6" class="border border-yellow-200 px-3 py-4 text-center text-gray-500">
                         No records to view
                     </td>
                 </tr>
@@ -203,7 +164,7 @@
 
                 @if ($scans->count() > 0)
                 <tr>
-                    <td colspan="{{ auth()->user()?->isAdmin() ? 14 : 13 }}" class="border border-yellow-200 px-2 py-1 text-center text-gray-500">
+                    <td colspan="6" class="border border-yellow-200 px-2 py-1 text-center text-gray-500">
                         <div class="grid grid-cols-[1fr_auto_1fr] items-center">
                             <div></div>
                             <div class="flex items-center justify-center gap-2">
@@ -223,6 +184,5 @@
             </tbody>
         </table>
     </div>
-
 </div>
 @endsection

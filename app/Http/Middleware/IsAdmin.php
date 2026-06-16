@@ -12,8 +12,8 @@ class IsAdmin
     {
         $user = $request->user();
 
-        if (! $user || $user->role !== User::ROLE_SUPER_ADMIN) {
-            abort(403, 'Akses hanya untuk super admin.');
+        if (! $user || $user->role !== User::ROLE_ADMIN) {
+            abort(403, 'Akses hanya untuk admin.');
         }
 
         return $next($request);

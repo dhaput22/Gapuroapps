@@ -105,26 +105,20 @@
     </form>
 
     <div class="flex flex-wrap gap-1 text-sm">
-        <a href="#" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG Incoming</a>
-        <a href="#" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">Request</a>
         <a href="{{ route('fg.storage.receiving') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG Receiving</a>
-        <a href="#" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG Return</a>
+        <a href="{{ route('fg.storage.return.index') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG Return</a>
         <a href="{{ route('fg.storage') }}" class="rounded border border-yellow-500 bg-yellow-300 px-3 py-2 font-semibold text-gray-800">FG Delivery</a>
         <a href="{{ route('fg.storage.stock') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG Stock</a>
         <a href="{{ route('fg.storage.swa') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG for SWA</a>
-        <a href="#" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG OnHold</a>
-        <a href="#" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG Dispose</a>
-        <a href="#" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">Customer Return</a>
-        <a href="#" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">Summary Stock</a>
-        <a href="#" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">Summary Delivery</a>
+        <a href="{{ route('fg.storage.dispose.index') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG Dispose</a>
+        <a href="{{ route('fg.storage.summary-stock') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">Summary Stock</a>
+        <a href="{{ route('fg.storage.summary-delivery') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">Summary Delivery</a>
     </div>
 
     <div class="flex flex-wrap gap-2">
         <a href="{{ route('fg.storage.delivery.scan') }}" class="rounded border border-yellow-500 bg-yellow-300 px-2 py-1 text-sm font-medium text-gray-800">
             Create
         </a>
-        <button type="button" class="rounded border border-yellow-500 bg-yellow-300 px-2 py-1 text-sm font-medium text-gray-800">Create With KanbanID</button>
-        <button type="button" class="rounded border border-yellow-500 bg-yellow-300 px-2 py-1 text-sm font-medium text-gray-800">Create QR</button>
     </div>
 
     <div class="overflow-x-auto rounded border border-yellow-300">
@@ -156,6 +150,9 @@
                     <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">Storage</th>
                     <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">Storage Date</th>
                     <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">Delivery By</th>
+                    @if(auth()->user()?->isAdmin())
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">Action</th>
+                    @endif
                 </tr>
             </thead>
             <tbody class="bg-yellow-50">
@@ -176,10 +173,23 @@
                     <td class="border border-yellow-200 px-2 py-1">{{ optional($scan->scanned_at)->format('Y-m-d') ?? optional($scan->created_at)->format('Y-m-d') }}</td>
                     @php($deliveryBy = $scan->deliveryOperator ?? $scan->operator)
                     <td class="border border-yellow-200 px-2 py-1">{{ $deliveryBy?->name ?? '-' }}</td>
+                    @if(auth()->user()?->isAdmin())
+                    <td class="border border-yellow-200 px-2 py-1 text-center">
+                        <div class="flex items-center justify-center gap-1">
+                            <a href="{{ route('fg.storage.delivery.edit', $scan) }}"
+                                class="rounded bg-blue-50 border border-blue-300 px-2 py-0.5 text-[11px] text-blue-700 hover:bg-blue-100">Edit</a>
+                            <form method="POST" action="{{ route('fg.storage.delivery.destroy', $scan) }}"
+                                onsubmit="return confirm('Yakin ingin menghapus data ini?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="rounded bg-red-50 border border-red-300 px-2 py-0.5 text-[11px] text-red-700 hover:bg-red-100">Hapus</button>
+                            </form>
+                        </div>
+                    </td>
+                    @endif
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="13" class="border border-yellow-200 px-3 py-2 text-center text-gray-500">
+                    <td colspan="{{ auth()->user()?->isAdmin() ? 14 : 13 }}" class="border border-yellow-200 px-3 py-2 text-center text-gray-500">
                         No record to view
                     </td>
                 </tr>
@@ -187,7 +197,7 @@
 
                 @if ($scans->count() > 0)
                 <tr>
-                    <td colspan="13" class="border border-yellow-200 px-2 py-1 text-center text-gray-500">
+                    <td colspan="{{ auth()->user()?->isAdmin() ? 14 : 13 }}" class="border border-yellow-200 px-2 py-1 text-center text-gray-500">
                         <div class="grid grid-cols-[1fr_auto_1fr] items-center">
                             <div></div>
                             <div class="flex items-center justify-center gap-2">

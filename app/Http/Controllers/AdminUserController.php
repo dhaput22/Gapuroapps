@@ -24,7 +24,7 @@ class AdminUserController extends Controller
             'page_size' => max(1, min(100, (int) $request->input('page_size', 10))),
         ];
 
-        $query = User::query()->where('role', '!=', User::ROLE_SUPER_ADMIN);
+        $query = User::query();
 
         if ($filters['role'] !== '') {
             $query->where('role', $filters['role']);
@@ -67,17 +67,11 @@ class AdminUserController extends Controller
 
         return redirect()
             ->route('admin.users.index')
-            ->with('success', 'Admin baru berhasil ditambahkan.');
+            ->with('success', 'User baru berhasil ditambahkan.');
     }
 
     public function updateRole(Request $request, User $user): RedirectResponse
     {
-        if ($user->isSuperAdmin()) {
-            return redirect()
-                ->route('admin.users.index')
-                ->withErrors(['role' => 'Role super admin tidak bisa diubah dari halaman ini.']);
-        }
-
         $validated = $request->validate([
             'role' => ['required', 'string', Rule::in(User::normalAdminRoles())],
         ]);

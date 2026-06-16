@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\FgDeliveryScan;
 use App\Models\FgReceivingScan;
+use App\Models\FgReturnScan;
 use App\Models\Operator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -119,7 +120,48 @@ class FgDeliveryController extends Controller
         }
 
         $receivingScan = $this->findReceivingScanByPartAndLot($partCode, $lotNo);
+
+        // Cek di FG Return jika tidak ada di FG Receiving
         if ($receivingScan === null) {
+            $returnScan = $this->findReturnScanByPartAndLot($partCode, $lotNo);
+            if ($returnScan !== null) {
+                $deliveryScan = FgDeliveryScan::query()->create([
+                    'label_id' => $returnScan->label_id,
+                    'part_code' => $returnScan->part_code,
+                    'part_name' => $returnScan->part_name,
+                    'lot_no' => $returnScan->lot_no,
+                    'qty_box' => (int) $returnScan->qty_box,
+                    'scanned_at' => $returnScan->scanned_at,
+                    'operator_id' => $returnScan->operator_id,
+                    'created_by' => $returnScan->created_by,
+                    'delivery_at' => $this->isDateString($deliveryDate) ? $deliveryDate . ' ' . now()->format('H:i:s') : now(),
+                    'delivery_operator_id' => $operator->id,
+                    'transfer_card_no' => $transferCardNo !== '' ? $transferCardNo : null,
+                ]);
+
+                $returnScan->delete();
+
+                $sessionIds = collect((array) $request->session()->get(self::DELIVERY_SCAN_IDS_SESSION_KEY, []))
+                    ->map(fn($id) => (int) $id)
+                    ->filter(fn(int $id) => $id > 0)
+                    ->push((int) $deliveryScan->id)
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                $request->session()->put(self::DELIVERY_SCAN_IDS_SESSION_KEY, $sessionIds);
+
+                return redirect()
+                    ->route('fg.storage.delivery.scan', [
+                        'delivery_date' => $deliveryDate,
+                        'transfer_card_no' => $transferCardNo,
+                        'carry' => 1,
+                        'part_code' => $deliveryScan->part_code,
+                        'operator_employee_id' => $operator->employee_id,
+                    ])
+                    ->with('success', 'Re-delivery dari FG Return berhasil. Data dipindahkan ke FG Delivery.');
+            }
+
             $existsOnDelivery = $this->findDeliveryScanByPartAndLot($partCode, $lotNo);
             if ($existsOnDelivery !== null) {
                 return back()
@@ -128,7 +170,7 @@ class FgDeliveryController extends Controller
             }
 
             return back()
-                ->withErrors(['lot_no' => 'Kombinasi Part Code dan Lot No belum terdaftar pada FG Receiving.'])
+                ->withErrors(['lot_no' => 'Kombinasi Part Code dan Lot No belum terdaftar pada FG Receiving atau FG Return.'])
                 ->withInput();
         }
 
@@ -169,6 +211,48 @@ class FgDeliveryController extends Controller
             ->with('success', 'Scan FG Delivery berhasil diproses. Data dipindahkan ke tabel FG Delivery.');
     }
 
+    public function edit(FgDeliveryScan $scan): View
+    {
+        $operators = Operator::query()->orderBy('name')->get();
+        return view('fg-storage.delivery-edit', compact('scan', 'operators'));
+    }
+
+    public function update(Request $request, FgDeliveryScan $scan): RedirectResponse
+    {
+        $validated = $request->validate([
+            'part_code' => ['required', 'string', 'max:100'],
+            'part_name' => ['nullable', 'string', 'max:255'],
+            'lot_no' => ['required', 'string', 'max:100'],
+            'qty_box' => ['required', 'integer', 'min:0'],
+            'delivery_at' => ['nullable', 'date'],
+            'delivery_operator_id' => ['nullable', 'exists:operators,id'],
+            'transfer_card_no' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $scan->update([
+            'part_code' => trim($validated['part_code']),
+            'part_name' => isset($validated['part_name']) ? trim($validated['part_name']) : $scan->part_name,
+            'lot_no' => trim($validated['lot_no']),
+            'qty_box' => (int) $validated['qty_box'],
+            'delivery_at' => $validated['delivery_at'] ?? $scan->delivery_at,
+            'delivery_operator_id' => $validated['delivery_operator_id'] ?? $scan->delivery_operator_id,
+            'transfer_card_no' => isset($validated['transfer_card_no']) ? (trim($validated['transfer_card_no']) !== '' ? trim($validated['transfer_card_no']) : null) : $scan->transfer_card_no,
+        ]);
+
+        return redirect()
+            ->route('fg.storage')
+            ->with('success', 'Data FG Delivery berhasil diperbarui.');
+    }
+
+    public function destroy(FgDeliveryScan $scan): RedirectResponse
+    {
+        $scan->delete();
+
+        return redirect()
+            ->route('fg.storage')
+            ->with('success', 'Data FG Delivery berhasil dihapus.');
+    }
+
     public function previewPart(Request $request): JsonResponse
     {
         $partCode = trim((string) $request->query('part_code', ''));
@@ -179,25 +263,36 @@ class FgDeliveryController extends Controller
         }
 
         $scan = $this->findReceivingScanByPartCode($partCode);
-        if ($scan === null) {
-            $existsOnDelivery = $this->findDeliveryScanByPartCode($partCode);
-            if ($existsOnDelivery !== null) {
-                return response()->json([
-                    'message' => 'Part Code ini sudah berada di FG Delivery. Jika batal kirim, scan kembali di FG Receiving.',
-                ], 422);
-            }
-
+        if ($scan !== null) {
             return response()->json([
-                'message' => 'Part Code belum terdaftar pada FG Receiving.',
+                'part_code' => $scan->part_code,
+                'part_name' => $scan->part_name,
+                'qty_box' => (int) $scan->qty_box,
+                'message' => 'Part Code ditemukan. Lanjut scan Lot No.',
+            ]);
+        }
+
+        $returnScan = $this->findReturnScanByPartCode($partCode);
+        if ($returnScan !== null) {
+            return response()->json([
+                'part_code' => $returnScan->part_code,
+                'part_name' => $returnScan->part_name,
+                'qty_box' => (int) $returnScan->qty_box,
+                'source' => 'return',
+                'message' => 'Part ditemukan di FG Return. Lanjut scan Lot No untuk re-delivery.',
+            ]);
+        }
+
+        $existsOnDelivery = $this->findDeliveryScanByPartCode($partCode);
+        if ($existsOnDelivery !== null) {
+            return response()->json([
+                'message' => 'Part Code ini sudah berada di FG Delivery. Jika batal kirim, scan kembali di FG Receiving.',
             ], 422);
         }
 
         return response()->json([
-            'part_code' => $scan->part_code,
-            'part_name' => $scan->part_name,
-            'qty_box' => (int) $scan->qty_box,
-            'message' => 'Part Code ditemukan. Lanjut scan Lot No.',
-        ]);
+            'message' => 'Part Code belum terdaftar pada FG Receiving atau FG Return.',
+        ], 422);
     }
 
     public function previewScan(Request $request): JsonResponse
@@ -211,27 +306,39 @@ class FgDeliveryController extends Controller
         }
 
         $scan = $this->findReceivingScanByPartAndLot($partCode, $lotNo);
-        if ($scan === null) {
-            $existsOnDelivery = $this->findDeliveryScanByPartAndLot($partCode, $lotNo);
-            if ($existsOnDelivery !== null) {
-                return response()->json([
-                    'message' => 'Barang sudah ada di FG Delivery. Jika batal kirim, scan kembali di FG Receiving.',
-                ], 422);
-            }
-
+        if ($scan !== null) {
             return response()->json([
-                'message' => 'Kombinasi Part Code dan Lot No belum terdaftar pada FG Receiving.',
+                'part_code' => $scan->part_code,
+                'part_name' => $scan->part_name,
+                'lot_no' => $scan->lot_no,
+                'qty_box' => (int) $scan->qty_box,
+                'action' => 'DELIVERY',
+                'message' => 'Lot ditemukan di FG Receiving. Submit untuk memindahkan ke FG Delivery.',
+            ]);
+        }
+
+        $returnScan = $this->findReturnScanByPartAndLot($partCode, $lotNo);
+        if ($returnScan !== null) {
+            return response()->json([
+                'part_code' => $returnScan->part_code,
+                'part_name' => $returnScan->part_name,
+                'lot_no' => $returnScan->lot_no,
+                'qty_box' => (int) $returnScan->qty_box,
+                'action' => 'REDELIVER_FROM_RETURN',
+                'message' => 'Lot ditemukan di FG Return. Submit untuk re-delivery.',
+            ]);
+        }
+
+        $existsOnDelivery = $this->findDeliveryScanByPartAndLot($partCode, $lotNo);
+        if ($existsOnDelivery !== null) {
+            return response()->json([
+                'message' => 'Barang sudah ada di FG Delivery. Jika batal kirim, scan kembali di FG Receiving.',
             ], 422);
         }
 
         return response()->json([
-            'part_code' => $scan->part_code,
-            'part_name' => $scan->part_name,
-            'lot_no' => $scan->lot_no,
-            'qty_box' => (int) $scan->qty_box,
-            'action' => 'DELIVERY',
-            'message' => 'Lot ditemukan di FG Receiving. Submit untuk memindahkan ke FG Delivery.',
-        ]);
+            'message' => 'Kombinasi Part Code dan Lot No belum terdaftar pada FG Receiving atau FG Return.',
+        ], 422);
     }
 
     private function buildDeliveryQuery(Request $request)
@@ -301,6 +408,38 @@ class FgDeliveryController extends Controller
             ->orderByDesc('id')
             ->get()
             ->first(function (FgReceivingScan $scan) use ($normalizedPartCode, $normalizedLot) {
+                return $this->normalizeCode((string) $scan->part_code) === $normalizedPartCode
+                    && $this->normalizeLot((string) $scan->lot_no) === $normalizedLot;
+            });
+    }
+
+    private function findReturnScanByPartCode(string $partCode): ?FgReturnScan
+    {
+        $normalizedPartCode = $this->normalizeCode($partCode);
+        if ($normalizedPartCode === '') {
+            return null;
+        }
+
+        return FgReturnScan::query()
+            ->orderByDesc('id')
+            ->get()
+            ->first(function (FgReturnScan $scan) use ($normalizedPartCode) {
+                return $this->normalizeCode((string) $scan->part_code) === $normalizedPartCode;
+            });
+    }
+
+    private function findReturnScanByPartAndLot(string $partCode, string $lotNo): ?FgReturnScan
+    {
+        $normalizedPartCode = $this->normalizeCode($partCode);
+        $normalizedLot = $this->normalizeLot($lotNo);
+        if ($normalizedPartCode === '' || $normalizedLot === '') {
+            return null;
+        }
+
+        return FgReturnScan::query()
+            ->orderByDesc('id')
+            ->get()
+            ->first(function (FgReturnScan $scan) use ($normalizedPartCode, $normalizedLot) {
                 return $this->normalizeCode((string) $scan->part_code) === $normalizedPartCode
                     && $this->normalizeLot((string) $scan->lot_no) === $normalizedLot;
             });

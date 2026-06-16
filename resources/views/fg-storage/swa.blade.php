@@ -18,40 +18,40 @@
     <h1 class="text-center text-2xl font-semibold text-gray-700">FG Storage</h1>
 
     @if (session('success'))
-        <div class="rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
-            {{ session('success') }}
-        </div>
+    <div class="rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+        {{ session('success') }}
+    </div>
     @endif
 
     @if ($errors->any())
-        <div class="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {{ $errors->first() }}
-        </div>
+    <div class="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        {{ $errors->first() }}
+    </div>
     @endif
 
     @php
-        $currentSortBy = $filters['sort_by'] ?? 'created_at';
-        $currentSortDir = strtolower($filters['sort_dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
-        $canManageWarehouseData = auth()->user()?->canManageWarehouseData() ?? false;
+    $currentSortBy = $filters['sort_by'] ?? 'created_at';
+    $currentSortDir = strtolower($filters['sort_dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+    $canManageWarehouseData = auth()->user()?->canManageWarehouseData() ?? false;
 
-        $sortUrl = static function (string $column) use ($filters, $currentSortBy, $currentSortDir): string {
-            $nextDirection = $currentSortBy === $column && $currentSortDir === 'asc' ? 'desc' : 'asc';
+    $sortUrl = static function (string $column) use ($filters, $currentSortBy, $currentSortDir): string {
+    $nextDirection = $currentSortBy === $column && $currentSortDir === 'asc' ? 'desc' : 'asc';
 
-            $query = [
-                'date_filter' => $filters['date_filter'] ?? null,
-                'date_from' => $filters['date_from'] ?? null,
-                'date_to' => $filters['date_to'] ?? null,
-                'search_by' => $filters['search_by'] ?? null,
-                'keyword' => $filters['keyword'] ?? null,
-                'page_size' => $filters['page_size'] ?? null,
-                'sort_by' => $column,
-                'sort_dir' => $nextDirection,
-            ];
+    $query = [
+    'date_filter' => $filters['date_filter'] ?? null,
+    'date_from' => $filters['date_from'] ?? null,
+    'date_to' => $filters['date_to'] ?? null,
+    'search_by' => $filters['search_by'] ?? null,
+    'keyword' => $filters['keyword'] ?? null,
+    'page_size' => $filters['page_size'] ?? null,
+    'sort_by' => $column,
+    'sort_dir' => $nextDirection,
+    ];
 
-            $query = array_filter($query, static fn($value) => $value !== null && $value !== '');
+    $query = array_filter($query, static fn($value) => $value !== null && $value !== '');
 
-            return route('fg.storage.swa', $query);
-        };
+    return route('fg.storage.swa', $query);
+    };
     @endphp
 
     <form method="GET" action="{{ route('fg.storage.swa') }}" class="rounded border border-gray-200 bg-gray-100 px-4 py-3">
@@ -125,17 +125,14 @@
     </div>
 
     <div class="flex flex-wrap gap-1 text-sm">
-        <a href="#" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG Incoming</a>
-        <a href="#" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">Request</a>
         <a href="{{ route('fg.storage.receiving') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG Receiving</a>
-        <a href="#" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG Return</a>
+        <a href="{{ route('fg.storage.return.index') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG Return</a>
         <a href="{{ route('fg.storage') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG Delivery</a>
         <a href="{{ route('fg.storage.stock') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG Stock</a>
         <a href="{{ route('fg.storage.swa') }}" class="rounded border border-yellow-500 bg-yellow-300 px-3 py-2 font-semibold text-gray-800">FG for SWA</a>
-        <a href="#" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG OnHold</a>
-        <a href="#" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG Dispose</a>
-        <a href="#" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">Customer Return</a>
-        <a href="#" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">Summary Stock</a>
+        <a href="{{ route('fg.storage.dispose.index') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">FG Dispose</a>
+        <a href="{{ route('fg.storage.summary-stock') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">Summary Stock</a>
+        <a href="{{ route('fg.storage.summary-delivery') }}" class="rounded border bg-white px-3 py-2 font-semibold text-blue-800 hover:bg-gray-100">Summary Delivery</a>
     </div>
 
     <div class="overflow-x-auto rounded border border-yellow-300">
@@ -185,75 +182,75 @@
             </thead>
             <tbody class="bg-yellow-50">
                 @forelse ($plans as $plan)
-                    @php
-                        $isMatch = (int) $plan->total_scan === (int) $plan->total_plan;
-                    @endphp
-                    <tr>
-                        <td class="border border-yellow-200 px-2 py-1 text-center">{{ ($plans->firstItem() ?? 0) + $loop->index }}</td>
-                        <td class="border border-yellow-200 px-2 py-1">{{ $plan->part_code }}</td>
-                        <td class="border border-yellow-200 px-2 py-1">{{ $plan->part_name }}</td>
-                        <td class="border border-yellow-200 px-2 py-1">{{ $plan->start_lot_no }}</td>
-                        <td class="border border-yellow-200 px-2 py-1">{{ $plan->end_lot_no }}</td>
-                        <td class="border border-yellow-200 px-2 py-1">{{ number_format((int) $plan->qty_box) }}</td>
-                        <td class="border border-yellow-200 px-2 py-1">{{ number_format((int) $plan->total_scan) }}</td>
-                        <td class="border border-yellow-200 px-2 py-1">{{ number_format((int) $plan->total_plan) }}</td>
-                        <td class="border border-yellow-200 px-2 py-1">{{ number_format((int) $plan->total_plan - (int) $plan->total_scan) }}</td>
-                        <td class="border border-yellow-200 px-2 py-1 font-semibold {{ $isMatch ? 'text-green-700' : 'text-red-700' }}">
-                            {{ $isMatch ? 'OK' : 'NO MATCH' }}
-                        </td>
-                        <td class="border border-yellow-200 px-2 py-1 text-center">
-                            @if ($canManageWarehouseData)
-                                <div class="inline-flex items-center gap-1">
-                                    <a href="{{ route('fg.storage.swa.edit', $plan) }}"
-                                        class="rounded border border-blue-300 bg-blue-50 px-2 py-1 text-[11px] text-blue-700">
-                                        Edit
-                                    </a>
-                                    <form method="POST" action="{{ route('fg.storage.swa.destroy', $plan) }}" onsubmit="return confirm('Hapus plan ini?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                            class="rounded border border-red-300 bg-red-50 px-2 py-1 text-[11px] text-red-700">
-                                            Delete
-                                        </button>
-                                    </form>
-                                </div>
-                            @else
-                                <span class="text-[11px] text-gray-500">View only</span>
-                            @endif
-                        </td>
-                    </tr>
+                @php
+                $isMatch = (int) $plan->total_scan === (int) $plan->total_plan;
+                @endphp
+                <tr>
+                    <td class="border border-yellow-200 px-2 py-1 text-center">{{ ($plans->firstItem() ?? 0) + $loop->index }}</td>
+                    <td class="border border-yellow-200 px-2 py-1">{{ $plan->part_code }}</td>
+                    <td class="border border-yellow-200 px-2 py-1">{{ $plan->part_name }}</td>
+                    <td class="border border-yellow-200 px-2 py-1">{{ $plan->start_lot_no }}</td>
+                    <td class="border border-yellow-200 px-2 py-1">{{ $plan->end_lot_no }}</td>
+                    <td class="border border-yellow-200 px-2 py-1">{{ number_format((int) $plan->qty_box) }}</td>
+                    <td class="border border-yellow-200 px-2 py-1">{{ number_format((int) $plan->total_scan) }}</td>
+                    <td class="border border-yellow-200 px-2 py-1">{{ number_format((int) $plan->total_plan) }}</td>
+                    <td class="border border-yellow-200 px-2 py-1">{{ number_format((int) $plan->total_plan - (int) $plan->total_scan) }}</td>
+                    <td class="border border-yellow-200 px-2 py-1 font-semibold {{ $isMatch ? 'text-green-700' : 'text-red-700' }}">
+                        {{ $isMatch ? 'OK' : 'NO MATCH' }}
+                    </td>
+                    <td class="border border-yellow-200 px-2 py-1 text-center">
+                        @if ($canManageWarehouseData)
+                        <div class="inline-flex items-center gap-1">
+                            <a href="{{ route('fg.storage.swa.edit', $plan) }}"
+                                class="rounded border border-blue-300 bg-blue-50 px-2 py-1 text-[11px] text-blue-700">
+                                Edit
+                            </a>
+                            <form method="POST" action="{{ route('fg.storage.swa.destroy', $plan) }}" onsubmit="return confirm('Hapus plan ini?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                    class="rounded border border-red-300 bg-red-50 px-2 py-1 text-[11px] text-red-700">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                        @else
+                        <span class="text-[11px] text-gray-500">View only</span>
+                        @endif
+                    </td>
+                </tr>
                 @empty
-                    <tr>
-                        <td colspan="11" class="border border-yellow-200 px-3 py-3 text-center text-gray-500">
-                            Belum ada plan SWA yang terdaftar. Klik tombol <strong>Create/Register Plan</strong> untuk menambah data.
-                        </td>
-                    </tr>
+                <tr>
+                    <td colspan="11" class="border border-yellow-200 px-3 py-3 text-center text-gray-500">
+                        Belum ada plan SWA yang terdaftar. Klik tombol <strong>Create/Register Plan</strong> untuk menambah data.
+                    </td>
+                </tr>
                 @endforelse
 
                 @if ($plans->count() > 0)
-                    <tr>
-                        <td colspan="11" class="border border-yellow-200 px-2 py-1 text-center text-gray-500">
-                            <div class="flex items-center justify-center gap-2">
-                                <a href="{{ $plans->onFirstPage() ? '#' : $plans->url(1) }}"
-                                    class="rounded border px-1 {{ $plans->onFirstPage() ? 'cursor-not-allowed bg-gray-100 text-gray-400' : 'bg-white text-gray-700' }}">
-                                    &laquo;
-                                </a>
-                                <a href="{{ $plans->onFirstPage() ? '#' : $plans->previousPageUrl() }}"
-                                    class="rounded border px-1 {{ $plans->onFirstPage() ? 'cursor-not-allowed bg-gray-100 text-gray-400' : 'bg-white text-gray-700' }}">
-                                    &lsaquo;
-                                </a>
-                                <span>Page {{ $plans->currentPage() }} of {{ $plans->lastPage() }}</span>
-                                <a href="{{ $plans->hasMorePages() ? $plans->nextPageUrl() : '#' }}"
-                                    class="rounded border px-1 {{ $plans->hasMorePages() ? 'bg-white text-gray-700' : 'cursor-not-allowed bg-gray-100 text-gray-400' }}">
-                                    &rsaquo;
-                                </a>
-                                <a href="{{ $plans->hasMorePages() ? $plans->url($plans->lastPage()) : '#' }}"
-                                    class="rounded border px-1 {{ $plans->hasMorePages() ? 'bg-white text-gray-700' : 'cursor-not-allowed bg-gray-100 text-gray-400' }}">
-                                    &raquo;
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
+                <tr>
+                    <td colspan="11" class="border border-yellow-200 px-2 py-1 text-center text-gray-500">
+                        <div class="flex items-center justify-center gap-2">
+                            <a href="{{ $plans->onFirstPage() ? '#' : $plans->url(1) }}"
+                                class="rounded border px-1 {{ $plans->onFirstPage() ? 'cursor-not-allowed bg-gray-100 text-gray-400' : 'bg-white text-gray-700' }}">
+                                &laquo;
+                            </a>
+                            <a href="{{ $plans->onFirstPage() ? '#' : $plans->previousPageUrl() }}"
+                                class="rounded border px-1 {{ $plans->onFirstPage() ? 'cursor-not-allowed bg-gray-100 text-gray-400' : 'bg-white text-gray-700' }}">
+                                &lsaquo;
+                            </a>
+                            <span>Page {{ $plans->currentPage() }} of {{ $plans->lastPage() }}</span>
+                            <a href="{{ $plans->hasMorePages() ? $plans->nextPageUrl() : '#' }}"
+                                class="rounded border px-1 {{ $plans->hasMorePages() ? 'bg-white text-gray-700' : 'cursor-not-allowed bg-gray-100 text-gray-400' }}">
+                                &rsaquo;
+                            </a>
+                            <a href="{{ $plans->hasMorePages() ? $plans->url($plans->lastPage()) : '#' }}"
+                                class="rounded border px-1 {{ $plans->hasMorePages() ? 'bg-white text-gray-700' : 'cursor-not-allowed bg-gray-100 text-gray-400' }}">
+                                &raquo;
+                            </a>
+                        </div>
+                    </td>
+                </tr>
                 @endif
             </tbody>
         </table>

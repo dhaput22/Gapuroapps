@@ -82,40 +82,12 @@
                         </li> -->
 
                         <li class="border-t">
-                            <button data-material="materialcontrol" title="Material Control" class="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-gray-100 sidebar-item-on-collapse">
-                                <span class="flex items-center gap-2">
-                                    <svg class="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                    </svg>
-                                    <span class="sidebar-hide-on-collapse">Material Control</span>
-                                </span>
-                            </button>
-                            <div id="acc-2" class="accordion-body hidden px-4 pb-3 text-sm text-gray-600 sidebar-hide-on-collapse">
-                                <div class="py-1 hover:bg-gray-100">Material Receiving</div>
-                                <a href="{{ route('material.storage') }}" class="block py-1 hover:bg-gray-100">
-                                    Material Storage
-                                </a>
-                            </div>
-                        </li>
-
-                        <!-- <li class="border-t">
-                            <button data-accordion="acc-3" class="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-gray-50">
-                                <span class="flex items-center gap-2">
-                                    <svg class="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                    </svg>
-                                    LotNo Product Control
-                                </span>
-                            </button>
-                        </li> -->
-
-                        <li class="border-t">
-                            <button data-fg="finishgoods" title="Finish Goods Control" class="w-full text-left px-4 py-3 flex items-center gap-2 hover:bg-gray-50 sidebar-item-on-collapse">
+                            <a href="{{ route('fg.storage') }}" title="Finish Goods Control" class="w-full text-left px-4 py-3 flex items-center gap-2 hover:bg-gray-50 sidebar-item-on-collapse">
                                 <svg class="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                 </svg>
                                 <span class="sidebar-hide-on-collapse">Finish Goods Control</span>
-                            </button>
+                            </a>
                         </li>
 
                         <li class="border-t">
@@ -129,14 +101,14 @@
                             </a>
                         </li>
 
-                        @if (auth()->user()?->isSuperAdmin())
+                        @if (auth()->user()?->isAdmin())
                             <li class="border-t">
-                                <a href="{{ route('admin.users.index') }}" title="Manajemen Admin" class="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-gray-50 sidebar-item-on-collapse">
+                                <a href="{{ route('admin.users.index') }}" title="Manajemen User" class="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-gray-50 sidebar-item-on-collapse">
                                     <span class="flex items-center gap-2">
                                         <svg class="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                         </svg>
-                                        <span class="sidebar-hide-on-collapse">Manajemen Admin</span>
+                                        <span class="sidebar-hide-on-collapse">Manajemen User</span>
                                     </span>
                                 </a>
                             </li>
@@ -304,29 +276,6 @@
           <a href="{{ route('fg.storage') }}" class="block py-1 hover:underline">FG Storage</a></div>
           <div class="text-sm text-gray-600 mt-2">Customer Receive</div>
           <div class="text-sm text-gray-600 mt-2">FG Delivery Plan</div>
-        `;
-                } else {
-                    html = `<div class="text-sm text-gray-600">No items</div>`;
-                }
-
-                showFlyoutFor(btn, html);
-            });
-        });
-
-        // new flyout click handlers: find elements with data-fly
-        document.querySelectorAll('[data-material]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-
-                const key = btn.getAttribute('data-material');
-                let html = '';
-
-                if (key === 'materialcontrol') {
-                    html = `
-          <div class="text-sm text-gray-600">Material Receiving</div>
-          <div class="text-sm text-gray-600 mt-2">
-            <a href="{{ route('material.storage') }}" class="block py-1 hover:underline">Material Storage</a>
-          </div>
         `;
                 } else {
                     html = `<div class="text-sm text-gray-600">No items</div>`;

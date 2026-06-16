@@ -96,6 +96,46 @@ class FgReceivingController extends Controller
         return view('fg-storage.receiving-unregistered', compact('filters', 'scans', 'totalCount', 'defaultPartCode', 'defaultOperatorEmployeeId'));
     }
 
+    public function edit(FgReceivingScan $scan): View
+    {
+        $operators = Operator::query()->orderBy('name')->get();
+        return view('fg-storage.receiving-edit', compact('scan', 'operators'));
+    }
+
+    public function update(Request $request, FgReceivingScan $scan): RedirectResponse
+    {
+        $validated = $request->validate([
+            'part_code' => ['required', 'string', 'max:100'],
+            'part_name' => ['nullable', 'string', 'max:255'],
+            'lot_no' => ['required', 'string', 'max:100'],
+            'qty_box' => ['required', 'integer', 'min:0'],
+            'scanned_at' => ['nullable', 'date'],
+            'operator_id' => ['nullable', 'exists:operators,id'],
+        ]);
+
+        $scan->update([
+            'part_code' => trim($validated['part_code']),
+            'part_name' => isset($validated['part_name']) ? trim($validated['part_name']) : $scan->part_name,
+            'lot_no' => trim($validated['lot_no']),
+            'qty_box' => (int) $validated['qty_box'],
+            'scanned_at' => $validated['scanned_at'] ?? $scan->scanned_at,
+            'operator_id' => $validated['operator_id'] ?? $scan->operator_id,
+        ]);
+
+        return redirect()
+            ->route('fg.storage.receiving')
+            ->with('success', 'Data FG Receiving berhasil diperbarui.');
+    }
+
+    public function destroy(FgReceivingScan $scan): RedirectResponse
+    {
+        $scan->delete();
+
+        return redirect()
+            ->route('fg.storage.receiving')
+            ->with('success', 'Data FG Receiving berhasil dihapus.');
+    }
+
     public function storeUnregistered(Request $request): RedirectResponse
     {
         $validated = $request->validate([

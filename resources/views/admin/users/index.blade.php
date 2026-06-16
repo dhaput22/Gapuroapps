@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Manajemen Admin')
+@section('title', 'Management User')
 
 @section('content')
 <div class="space-y-4 text-[13px] text-gray-700">
@@ -11,11 +11,11 @@
         <p class="text-sm">
             <span class="font-semibold">System Admin</span>
             <span class="mx-2 text-gray-400">|</span>
-            Manajemen Role Admin
+            Management Role
         </p>
     </div>
 
-    <h1 class="text-center text-2xl font-semibold text-gray-700">Manajemen Admin</h1>
+    <h1 class="text-center text-2xl font-semibold text-gray-700">Management User</h1>
 
     @if (session('success'))
         <div class="rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
@@ -65,7 +65,7 @@
 
         <div class="mt-3">
             <button type="submit" class="rounded border border-yellow-500 bg-yellow-300 px-3 py-2 text-sm font-semibold text-gray-800">
-                Add Admin
+                Add User
             </button>
         </div>
     </form>
@@ -106,7 +106,7 @@
                     <th class="w-8 border border-yellow-300 px-2 py-2 text-center">#</th>
                     <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Nama</th>
                     <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Username</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Role Saat Ini</th>
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-left">Role</th>
                     <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">Ubah Role</th>
                 </tr>
             </thead>
@@ -137,7 +137,7 @@
                 @empty
                     <tr>
                         <td colspan="5" class="border border-yellow-200 px-3 py-3 text-center text-gray-500">
-                            Belum ada admin biasa yang terdaftar.
+                            Belum ada user yang terdaftar.
                         </td>
                     </tr>
                 @endforelse

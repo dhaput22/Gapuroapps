@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'warehouse_capacity_box' => (int) env('FG_STORAGE_CAPACITY_BOX', 12000),
+    'warehouse_capacity_box' => (int) env('FG_STORAGE_CAPACITY_BOX', 100000),
     'dashboard_polling_seconds' => (int) env('FG_STORAGE_DASHBOARD_POLLING_SECONDS', 15),
     'item_type_capacities' => [
         ['key' => 'bottle_20ml', 'label' => 'Bottle 20ml', 'capacity_box' => 150, 'aliases' => ['BOTTLE20', 'BOTTLE,20']],
@@ -14,10 +14,10 @@ return [
         ['key' => 'n3_cover', 'label' => 'N3 COVER', 'capacity_box' => 250],
         ['key' => 'nasuno_3_case', 'label' => 'NASUNO 3 CASE', 'capacity_box' => 800],
         ['key' => 'n3_case_m1_m2', 'label' => 'N3 CASE M1, M2', 'capacity_box' => 400],
-        ['key' => 'craig_case_l', 'label' => 'CRAIG CASE L', 'capacity_box' => 250],
-        ['key' => 'craig_case_s_345', 'label' => 'CRAIG CASE S 3,4,5', 'capacity_box' => 450],
-        ['key' => 'ha3p_case_s2_m', 'label' => 'HA3P CASE S2 / M', 'capacity_box' => 250],
-        ['key' => 'ha3p_case_s2', 'label' => 'HA3P CASE S2', 'capacity_box' => 220],
+        ['key' => 'craig_case_l', 'label' => 'CRAIG CASE L', 'capacity_box' => 5000],
+        ['key' => 'craig_case_s_456', 'label' => 'CRAIG CASE S 4,5,6', 'capacity_box' => 5000],
+        ['key' => 'ha3p_case_s2_m', 'label' => 'HA3P CASE S2 / M', 'capacity_box' => 8000],
+        ['key' => 'ha3p_case_s2', 'label' => 'HA3P CASE S2', 'capacity_box' => 7000],
         ['key' => 'ink_bottle_cap', 'label' => 'INK BOTTLE CAP', 'capacity_box' => 300],
         ['key' => 'top_cap', 'label' => 'TOP CAP', 'capacity_box' => 280],
         ['key' => 'hamana_glee', 'label' => 'HAMANA GLEE', 'capacity_box' => 450],
