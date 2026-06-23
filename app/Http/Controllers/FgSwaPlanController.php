@@ -97,7 +97,7 @@ class FgSwaPlanController extends Controller
         $plan->update($validated);
 
         return redirect()
-            ->route('fg.storage.swa')
+            ->back()
             ->with('success', 'Plan FG for SWA berhasil diperbarui.');
     }
 
@@ -108,7 +108,7 @@ class FgSwaPlanController extends Controller
         $plan->delete();
 
         return redirect()
-            ->route('fg.storage.swa')
+            ->back()
             ->with('success', 'Plan FG for SWA berhasil dihapus.');
     }
 

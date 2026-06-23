@@ -66,8 +66,8 @@ class AdminUserController extends Controller
         ]);
 
         return redirect()
-            ->route('admin.users.index')
-            ->with('success', 'User baru berhasil ditambahkan.');
+            ->back()
+            ->with('success', 'New user added successfully.');
     }
 
     public function updateRole(Request $request, User $user): RedirectResponse
@@ -81,7 +81,62 @@ class AdminUserController extends Controller
         ]);
 
         return redirect()
-            ->route('admin.users.index')
-            ->with('success', 'Role admin berhasil diperbarui.');
+            ->back()
+            ->with('success', 'User role updated successfully.');
+    }
+
+    public function edit(User $user): View
+    {
+        $availableRoles = User::normalAdminRoleLabels();
+        return view('admin.users.edit', compact('user', 'availableRoles'));
+    }
+
+    public function update(Request $request, User $user): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:50', Rule::unique('users', 'username')->ignore($user->id)],
+            'role' => ['required', 'string', Rule::in(User::normalAdminRoles())],
+            'password' => ['nullable', 'confirmed', Password::defaults()],
+        ]);
+
+        $data = ['name' => $validated['name'], 'username' => $validated['username'], 'role' => $validated['role']];
+
+        if (!empty($validated['password'])) {
+            $data['password'] = Hash::make($validated['password']);
+        }
+
+        $user->update($data);
+
+        return redirect()
+            ->back()
+            ->with('success', 'User data updated successfully.');
+    }
+
+    public function deactivate(User $user): RedirectResponse
+    {
+        $user->update(['status' => 'inactive']);
+
+        return redirect()
+            ->back()
+            ->with('success', 'User account deactivated successfully.');
+    }
+
+    public function activate(User $user): RedirectResponse
+    {
+        $user->update(['status' => 'active']);
+
+        return redirect()
+            ->back()
+            ->with('success', 'User account activated successfully.');
+    }
+
+    public function destroy(User $user): RedirectResponse
+    {
+        $user->delete();
+
+        return redirect()
+            ->back()
+            ->with('success', 'User deleted successfully.');
     }
 }

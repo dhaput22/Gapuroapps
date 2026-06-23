@@ -130,11 +130,17 @@
             <p id="scan_hint" class="text-xs text-gray-500"></p>
             <div class="flex items-center gap-2">
                 <button type="submit"
-                    class="rounded border border-yellow-500 bg-yellow-300 px-3 py-2 text-xs font-semibold text-gray-800">
+                    class="inline-flex items-center gap-1.5 rounded border border-yellow-500 bg-yellow-300 px-3 py-2 text-xs font-semibold text-gray-800 hover:bg-yellow-400">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                     Register (Enter)
                 </button>
                 <a href="{{ route('fg.storage.receiving') }}"
-                    class="rounded border border-gray-300 bg-white px-3 py-2 text-xs text-gray-700">
+                    class="inline-flex items-center gap-1.5 rounded border border-gray-300 bg-white px-3 py-2 text-xs text-gray-700 hover:bg-gray-50">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
                     Back to FG Receiving
                 </a>
             </div>

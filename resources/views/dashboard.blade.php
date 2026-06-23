@@ -14,7 +14,7 @@
             <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
                 <div>
                     <h3 class="text-2xl font-black tracking-wide text-slate-900">FG STORAGE AREA MAP</h3>
-                    <p class="text-xs text-slate-500">Live map terintegrasi stok aktual, kapasitas, dan sisa ruang per jenis barang.</p>
+                    <p class="text-xs text-slate-500">Live map integrating actual stock, capacity, and remaining space per item type.</p>
                 </div>
                 <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] text-slate-600">
                     <span class="inline-flex h-2.5 w-2.5 animate-pulse rounded-full bg-cyan-500"></span>
@@ -319,19 +319,19 @@
                     <div class="mb-3 rounded-xl border border-slate-200 bg-white px-3 py-3">
                         <p class="text-[11px] uppercase tracking-[0.1em] text-slate-500">Selected Zone</p>
                         <p id="fg-map-selected-label" class="mt-1 text-base font-black text-slate-900">-</p>
-                        <p id="fg-map-selected-subtitle" class="mt-1 text-xs text-slate-500">Klik area map untuk melihat detail kapasitas.</p>
+                        <p id="fg-map-selected-subtitle" class="mt-1 text-xs text-slate-500">Click a map area to view capacity details.</p>
                     </div>
 
                     <div class="grid grid-cols-2 gap-2 text-xs">
                         <article class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
                             <p class="text-slate-500">Stock</p>
                             <p id="fg-map-selected-stock" class="fg-map-info-value text-slate-900">0</p>
-                            <p class="text-[10px] text-slate-500">box</p>
+                            <p class="text-[10px] text-slate-500">pcs</p>
                         </article>
                         <article class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
                             <p class="text-slate-500">Reminder</p>
                             <p id="fg-map-selected-available" class="fg-map-info-value text-emerald-700">0</p>
-                            <p class="text-[10px] text-slate-500">box</p>
+                            <p class="text-[10px] text-slate-500">pcs</p>
                         </article>
                         <article class="col-span-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
                             <p class="text-slate-500">Utilization</p>
@@ -384,42 +384,52 @@
         <section
             id="fg-live-dashboard"
             data-endpoint="{{ route('dashboard.fg-storage.metrics') }}"
-            data-polling-ms="{{ max(5000, ((int) data_get($fgMetrics, 'meta.polling_seconds', 15) * 1000)) }}"
+            data-polling-ms="{{ ((int) data_get($fgMetrics, 'meta.polling_seconds', 2) * 1000) }}"
             class="order-1 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Realtime Dashboard</p>
                     <h3 class="mt-1 text-2xl font-black text-slate-800">FG Storage Live Monitoring</h3>
                 </div>
-                <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                    <span id="fg-live-indicator" class="inline-flex h-2.5 w-2.5 animate-pulse rounded-full bg-amber-500"></span>
-                    <span>Last update: <span id="fg-last-update">{{ $lastUpdate ? \Illuminate\Support\Carbon::parse($lastUpdate)->format('d/m/Y H:i:s') : '-' }}</span></span>
+                <div class="flex items-center gap-2">
+                    <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                        <span id="fg-live-indicator" class="inline-flex h-2.5 w-2.5 animate-pulse rounded-full bg-amber-500"></span>
+                        <span>Last update: <span id="fg-last-update">{{ $lastUpdate ? \Illuminate\Support\Carbon::parse($lastUpdate)->format('d/m/Y H:i:s') : '-' }}</span></span>
+                    </div>
+                    <button
+                        id="btn-notif-mute"
+                        type="button"
+                        title="Mute sound notifications"
+                        class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 hover:bg-slate-100 transition-colors">
+                        <span id="btn-notif-mute-icon">🔔</span>
+                        <span id="btn-notif-mute-label">Sound On</span>
+                    </button>
                 </div>
             </div>
 
             <div class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                 <article class="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-500 to-teal-600 p-4 text-white shadow-sm">
                     <p class="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-100">Receive Today</p>
-                    <p id="fg-receiving-qty" class="mt-3 text-3xl font-black leading-none">{{ number_format((int) data_get($todayReceiving, 'qty', 0)) }} box</p>
-                    <p id="fg-receiving-rows" class="mt-2 text-xs text-emerald-100">{{ number_format((int) data_get($todayReceiving, 'rows', 0)) }} transaksi</p>
+                    <p id="fg-receiving-qty" class="mt-3 text-3xl font-black leading-none">{{ number_format((int) data_get($todayReceiving, 'rows', 0)) }} boxes</p>
+                    <p id="fg-receiving-rows" class="mt-2 text-xs text-emerald-100">{{ number_format((int) data_get($todayReceiving, 'qty', 0)) }} pcs</p>
                 </article>
 
                 <article class="rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-500 to-blue-600 p-4 text-white shadow-sm">
                     <p class="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100">Delivery Today</p>
-                    <p id="fg-delivery-qty" class="mt-3 text-3xl font-black leading-none">{{ number_format((int) data_get($todayDelivery, 'qty', 0)) }} box</p>
-                    <p id="fg-delivery-rows" class="mt-2 text-xs text-cyan-100">{{ number_format((int) data_get($todayDelivery, 'rows', 0)) }} transaksi</p>
+                    <p id="fg-delivery-qty" class="mt-3 text-3xl font-black leading-none">{{ number_format((int) data_get($todayDelivery, 'rows', 0)) }} boxes</p>
+                    <p id="fg-delivery-rows" class="mt-2 text-xs text-cyan-100">{{ number_format((int) data_get($todayDelivery, 'qty', 0)) }} pcs</p>
                 </article>
 
                 <article class="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-500 to-indigo-600 p-4 text-white shadow-sm">
                     <p class="text-xs font-semibold uppercase tracking-[0.16em] text-violet-100">Current Stock</p>
-                    <p id="fg-stock-qty" class="mt-3 text-3xl font-black leading-none">{{ number_format((int) data_get($stockMetrics, 'qty', 0)) }} box</p>
-                    <p id="fg-stock-rows" class="mt-2 text-xs text-violet-100">{{ number_format((int) data_get($stockMetrics, 'rows', 0)) }} lot aktif</p>
+                    <p id="fg-stock-qty" class="mt-3 text-3xl font-black leading-none">{{ number_format((int) data_get($stockMetrics, 'rows', 0)) }} active lots</p>
+                    <p id="fg-stock-rows" class="mt-2 text-xs text-violet-100">{{ number_format((int) data_get($stockMetrics, 'qty', 0)) }} pcs</p>
                 </article>
 
                 <article class="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-400 to-orange-500 p-4 text-slate-900 shadow-sm">
                     <p class="text-xs font-semibold uppercase tracking-[0.16em] text-amber-900/80">Available Capacity</p>
-                    <p id="fg-available-qty" class="mt-3 text-3xl font-black leading-none">{{ number_format((int) data_get($stockMetrics, 'available_qty', 0)) }} box</p>
-                    <p id="fg-capacity-label" class="mt-2 text-xs text-amber-900/80">dari total {{ number_format((int) data_get($stockMetrics, 'capacity_qty', 0)) }} box</p>
+                    <p id="fg-available-qty" class="mt-3 text-3xl font-black leading-none">{{ number_format((int) data_get($stockMetrics, 'available_qty', 0)) }} pcs</p>
+                    <p id="fg-capacity-label" class="mt-2 text-xs text-amber-900/80">of total {{ number_format((int) data_get($stockMetrics, 'capacity_qty', 0)) }} pcs</p>
                 </article>
             </div>
 
@@ -441,8 +451,8 @@
 
                 <div class="mt-3 grid gap-2 text-xs text-slate-600 sm:grid-cols-3">
                     <p>Date: <strong id="fg-trend-last-date" class="text-slate-800">-</strong></p>
-                    <p>Receive: <strong id="fg-trend-last-receive" style="color:#4a7c32">0 box</strong></p>
-                    <p>Delivery: <strong id="fg-trend-last-delivery" style="color:#8a4a1f">0 box</strong></p>
+                    <p>Receive: <strong id="fg-trend-last-receive" style="color:#4a7c32">0 pcs</strong></p>
+                    <p>Delivery: <strong id="fg-trend-last-delivery" style="color:#8a4a1f">0 pcs</strong></p>
                 </div>
             </div>
 
@@ -458,8 +468,8 @@
                         style="width: {{ number_format((float) data_get($stockMetrics, 'used_percent_for_bar', 0), 1, '.', '') }}%"></div>
                 </div>
                 <div class="mt-2 grid gap-2 text-xs text-slate-600 sm:grid-cols-3">
-                    <p>Terpakai: <strong id="fg-used-qty" class="text-slate-800">{{ number_format((int) data_get($stockMetrics, 'qty', 0)) }} box</strong></p>
-                    <p>Sisa: <strong id="fg-remaining-qty" class="text-slate-800">{{ number_format((int) data_get($stockMetrics, 'available_qty', 0)) }} box</strong></p>
+                    <p>Used: <strong id="fg-used-qty" class="text-slate-800">{{ number_format((int) data_get($stockMetrics, 'qty', 0)) }} pcs</strong></p>
+                    <p>Remaining: <strong id="fg-remaining-qty" class="text-slate-800">{{ number_format((int) data_get($stockMetrics, 'available_qty', 0)) }} pcs</strong></p>
                     <p>Status: <strong id="fg-capacity-status" class="{{ (bool) data_get($stockMetrics, 'over_capacity', false) ? 'text-rose-600' : 'text-emerald-700' }}">{{ (bool) data_get($stockMetrics, 'over_capacity', false) ? 'OVER CAPACITY' : 'Within Capacity' }}</strong></p>
                 </div>
             </div>
@@ -521,7 +531,7 @@
                 <div class="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
                     <div>
                         <h4 class="text-sm font-black uppercase tracking-[0.12em] text-amber-800">Available Capacity</h4>
-                        <p class="mt-0.5 text-[11px] text-slate-600">Utilisasi kapasitas gudang - stok aktual vs batas konfigurasi</p>
+                        <p class="mt-0.5 text-[11px] text-slate-600">Warehouse capacity utilization — actual stock vs. configured limits</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold">
                         <span class="inline-flex items-center gap-1.5 rounded-full px-2 py-1" style="border:1px solid rgba(140,200,112,.5);background:rgba(140,200,112,.12);color:#4a7c32"><span class="inline-block h-2 w-3.5 rounded-[2px]" style="background:#8CC870"></span>Low (&lt;80%)</span>
@@ -588,13 +598,14 @@
             </div>
             <!-- end Available Capacity -->
 
+            <script type="application/json" id="fg-initial-metrics">@json($fgMetrics)</script>
             <script>
                 (function() {
                     const root = document.getElementById('fg-live-dashboard');
                     if (!root) return;
 
                     const endpoint = root.dataset.endpoint || '';
-                    const pollingMs = Math.max(5000, Number(root.dataset.pollingMs || '15000'));
+                    const pollingMs = Math.max(1000, Number(root.dataset.pollingMs || '2000'));
                     const formatter = new Intl.NumberFormat('id-ID');
                     const flowBody = document.getElementById('fg-flow-tbody');
                     const typeCapacityBody = document.getElementById('fg-type-capacity-tbody');
@@ -623,6 +634,135 @@
                     };
 
                     const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+                    // ── Capacity Notification System ───────────────────────
+                    const capacityNotifier = (() => {
+                        const WARN_THRESHOLD = 80;
+                        const prevState = {};
+                        let soundMuted = localStorage.getItem('fg_sound_muted') === 'true';
+
+                        function playSound(type) {
+                            if (soundMuted) return;
+                            try {
+                                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                                if (!AudioCtx) return;
+                                const ctx = new AudioCtx();
+                                const notes = type === 'over'
+                                    ? [[880, 0.12], [880, 0.12], [880, 0.22]]
+                                    : [[520, 0.15], [520, 0.15]];
+                                let t = ctx.currentTime + 0.05;
+                                notes.forEach(([freq, dur]) => {
+                                    const osc = ctx.createOscillator();
+                                    const gain = ctx.createGain();
+                                    osc.connect(gain); gain.connect(ctx.destination);
+                                    osc.type = 'sine';
+                                    osc.frequency.value = freq;
+                                    gain.gain.setValueAtTime(0.45, t);
+                                    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+                                    osc.start(t); osc.stop(t + dur);
+                                    t += dur + 0.07;
+                                });
+                                setTimeout(() => ctx.close(), (t + 0.5) * 1000);
+                            } catch (_) {}
+                        }
+
+                        function showToast(level, title, body) {
+                            const container = document.getElementById('capacity-notif-container');
+                            if (!container) return;
+                            const isOver = level === 'over';
+                            const id = `cap-n-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+                            const bg = isOver ? '#fff1f2' : '#fffbeb';
+                            const border = isOver ? '#f43f5e' : '#f59e0b';
+                            const textColor = isOver ? '#881337' : '#78350f';
+                            const toast = document.createElement('div');
+                            toast.id = id;
+                            toast.style.cssText = `pointer-events:auto;background:${bg};border:1.5px solid ${border};border-radius:12px;padding:12px 14px;box-shadow:0 4px 24px rgba(0,0,0,.13);display:flex;gap:10px;align-items:flex-start;animation:notif-in 0.3s ease`;
+                            const closeBtn = document.createElement('button');
+                            closeBtn.type = 'button';
+                            closeBtn.title = 'Close';
+                            closeBtn.style.cssText = `flex-shrink:0;background:none;border:none;cursor:pointer;font-size:18px;color:${textColor};opacity:.45;padding:0 2px;line-height:1`;
+                            closeBtn.textContent = '×';
+                            closeBtn.addEventListener('click', function() {
+                                toast.style.animation = 'notif-out 0.25s ease forwards';
+                                setTimeout(function() { toast.remove(); }, 250);
+                            });
+                            const icon = document.createElement('span');
+                            icon.style.cssText = 'font-size:22px;line-height:1.1;flex-shrink:0';
+                            icon.textContent = isOver ? '🚨' : '⚠️';
+                            const content = document.createElement('div');
+                            content.style.cssText = 'flex:1;min-width:0';
+                            content.innerHTML = `
+                                <div style="font-weight:700;font-size:13px;color:${textColor};line-height:1.3">${title}</div>
+                                <div style="font-size:11.5px;color:${textColor};opacity:.8;margin-top:3px;line-height:1.4">${body}</div>
+                            `;
+                            toast.appendChild(icon);
+                            toast.appendChild(content);
+                            toast.appendChild(closeBtn);
+                            container.appendChild(toast);
+                        }
+
+                        function check(payload) {
+                            const items = payload?.item_type_capacities ?? [];
+                            const pct = Number(payload?.stock?.used_percent ?? 0);
+                            const over = Boolean(payload?.stock?.over_capacity);
+
+                            // warehouse-wide check
+                            const wLvl = over ? 'over' : pct >= WARN_THRESHOLD ? 'warn' : 'ok';
+                            const wPrev = prevState['__wh__'] ?? 'ok';
+                            if (wLvl !== wPrev) {
+                                if (wLvl === 'over') {
+                                    playSound('over');
+                                    showToast('over', 'WAREHOUSE OVER CAPACITY!', `Total warehouse capacity has been exceeded — ${pct.toFixed(1)}% used`);
+                                } else if (wLvl === 'warn') {
+                                    playSound('warn');
+                                    showToast('warn', 'Warehouse Capacity Warning', `Warehouse capacity is approaching its limit — ${pct.toFixed(1)}% used`);
+                                }
+                            }
+                            prevState['__wh__'] = wLvl;
+
+                            // per item type check
+                            items.forEach(function(item) {
+                                if (!item.has_capacity) return;
+                                const k = item.key;
+                                const ip = Number(item.used_percent ?? 0);
+                                const io = Boolean(item.over_capacity);
+                                const lvl = io ? 'over' : ip >= WARN_THRESHOLD ? 'warn' : 'ok';
+                                const prev = prevState[k] ?? 'ok';
+                                if (lvl !== prev) {
+                                    if (lvl === 'over') {
+                                        playSound('over');
+                                        showToast('over', `${item.label} — OVER CAPACITY`, `Stock exceeds capacity by ${formatter.format(item.excess_qty ?? 0)} boxes (${ip.toFixed(1)}% used)`);
+                                    } else if (lvl === 'warn') {
+                                        playSound('warn');
+                                        showToast('warn', `${item.label} — Approaching Limit`, `Capacity almost full — ${ip.toFixed(1)}% used`);
+                                    }
+                                }
+                                prevState[k] = lvl;
+                            });
+                        }
+
+                        function syncMuteUI() {
+                            const btn = document.getElementById('btn-notif-mute');
+                            const icon = document.getElementById('btn-notif-mute-icon');
+                            const lbl = document.getElementById('btn-notif-mute-label');
+                            if (btn) btn.title = soundMuted ? 'Enable sound notifications' : 'Mute sound notifications';
+                            if (icon) icon.textContent = soundMuted ? '🔇' : '🔔';
+                            if (lbl) lbl.textContent = soundMuted ? 'Sound Off' : 'Sound On';
+                        }
+
+                        function toggleMute() {
+                            soundMuted = !soundMuted;
+                            localStorage.setItem('fg_sound_muted', soundMuted);
+                            syncMuteUI();
+                            return soundMuted;
+                        }
+
+                        syncMuteUI();
+
+                        return { check, toggleMute };
+                    })();
+
+                    document.getElementById('btn-notif-mute')?.addEventListener('click', () => capacityNotifier.toggleMute());
 
                     const formatDate = (value) => {
                         if (!value) return '-';
@@ -712,7 +852,7 @@
 
                         if (!zone || !zoneStat) {
                             setText('fg-map-selected-label', zone?.dataset.zoneLabel || 'Utility Zone');
-                            setText('fg-map-selected-subtitle', 'Zona ini tidak memiliki konfigurasi kapasitas stok.');
+                            setText('fg-map-selected-subtitle', 'This zone has no stock capacity configuration.');
                             setText('fg-map-selected-stock', '0');
                             setText('fg-map-selected-available', 'N/A');
                             setText('fg-map-selected-used', 'N/A');
@@ -740,7 +880,7 @@
 
                         setText('fg-map-selected-label', zoneStat.label || zone.dataset.zoneLabel || '-');
                         if (hasCapacity) {
-                            setText('fg-map-selected-subtitle', `Capacity ${formatter.format(capacityQty)} box | Lot ${formatter.format(safeNumber(zoneStat.stock_rows))}`);
+                            setText('fg-map-selected-subtitle', `Capacity ${formatter.format(capacityQty)} pcs | Lot ${formatter.format(safeNumber(zoneStat.stock_rows))}`);
                             setText('fg-map-selected-stock', formatter.format(stockQty));
                             setText('fg-map-selected-available', formatter.format(availableQty));
                             setText('fg-map-selected-used', `${usedPercent.toFixed(1)}%`);
@@ -751,7 +891,7 @@
                                     'h-2.5 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 transition-all duration-300';
                             }
                         } else {
-                            setText('fg-map-selected-subtitle', 'Belum ada kapasitas terdaftar untuk jenis barang ini.');
+                            setText('fg-map-selected-subtitle', 'No capacity registered for this item type yet.');
                             setText('fg-map-selected-stock', formatter.format(stockQty));
                             setText('fg-map-selected-available', 'N/A');
                             setText('fg-map-selected-used', 'N/A');
@@ -1036,8 +1176,8 @@
                             trendTooltip.innerHTML = `
                                 <div class="mb-1 font-black" style="color:${detail.kind === 'receive' ? '#4a7c32' : '#8a4a1f'}">${detail.label}</div>
                                 <div class="text-slate-500">${detail.date}</div>
-                                <div class="mt-1 flex justify-between gap-5"><span>Qty</span><strong>${formatter.format(detail.qty)} box</strong></div>
-                                <div class="flex justify-between gap-5"><span>Transaksi</span><strong>${formatter.format(detail.rows)}</strong></div>
+                                <div class="mt-1 flex justify-between gap-5"><span>Qty</span><strong>${formatter.format(detail.qty)} pcs</strong></div>
+                                <div class="flex justify-between gap-5"><span>Boxes</span><strong>${formatter.format(detail.rows)}</strong></div>
                             `;
                             trendTooltip.classList.remove('hidden');
 
@@ -1144,8 +1284,8 @@
 
                         const lastIndex = rows.length - 1;
                         setText('fg-trend-last-date', formatDate(rows[lastIndex]?.date || '-'));
-                        setText('fg-trend-last-receive', `${formatter.format(receiveSeries[lastIndex] || 0)} box`);
-                        setText('fg-trend-last-delivery', `${formatter.format(deliverySeries[lastIndex] || 0)} box`);
+                        setText('fg-trend-last-receive', `${formatter.format(receiveSeries[lastIndex] || 0)} pcs`);
+                        setText('fg-trend-last-delivery', `${formatter.format(deliverySeries[lastIndex] || 0)} pcs`);
                     };
 
                     const render = (payload) => {
@@ -1167,17 +1307,17 @@
                         const usedPercentForBar = Number(stock?.used_percent_for_bar || clamp(usedPercent, 0, 100));
                         const overCapacity = Boolean(stock?.over_capacity);
 
-                        setText('fg-receiving-qty', `${formatter.format(receivingQty)} box`);
-                        setText('fg-receiving-rows', `${formatter.format(receivingRows)} transaksi`);
-                        setText('fg-delivery-qty', `${formatter.format(deliveryQty)} box`);
-                        setText('fg-delivery-rows', `${formatter.format(deliveryRows)} transaksi`);
-                        setText('fg-stock-qty', `${formatter.format(stockQty)} box`);
-                        setText('fg-stock-rows', `${formatter.format(stockRows)} lot aktif`);
-                        setText('fg-available-qty', `${formatter.format(availableQty)} box`);
-                        setText('fg-capacity-label', `dari total ${formatter.format(capacityQty)} box`);
+                        setText('fg-receiving-qty', `${formatter.format(receivingRows)} boxes`);
+                        setText('fg-receiving-rows', `${formatter.format(receivingQty)} pcs`);
+                        setText('fg-delivery-qty', `${formatter.format(deliveryRows)} boxes`);
+                        setText('fg-delivery-rows', `${formatter.format(deliveryQty)} pcs`);
+                        setText('fg-stock-qty', `${formatter.format(stockRows)} boxes`);
+                        setText('fg-stock-rows', `${formatter.format(stockQty)} pcs`);
+                        setText('fg-available-qty', `${formatter.format(availableQty)} pcs`);
+                        setText('fg-capacity-label', `of total ${formatter.format(capacityQty)} pcs`);
                         setText('fg-used-percent', `${usedPercent.toFixed(1)}%`);
-                        setText('fg-used-qty', `${formatter.format(stockQty)} box`);
-                        setText('fg-remaining-qty', `${formatter.format(availableQty)} box`);
+                        setText('fg-used-qty', `${formatter.format(stockQty)} pcs`);
+                        setText('fg-remaining-qty', `${formatter.format(availableQty)} pcs`);
                         setText('fg-capacity-status', overCapacity ? 'OVER CAPACITY' : 'Within Capacity');
 
                         const statusLabel = document.getElementById('fg-capacity-status');
@@ -1200,6 +1340,7 @@
                         renderCapacityViz(payload?.item_type_capacities ?? []);
                         renderAreaMap(payload?.item_type_capacities ?? []);
                         renderFlowTable(payload?.daily_flow ?? []);
+                        capacityNotifier.check(payload);
                     };
 
                     const refresh = async () => {
@@ -1226,7 +1367,9 @@
                         }
                     };
 
-                    render(@json($fgMetrics));
+                    const initialMetricsEl = document.getElementById('fg-initial-metrics');
+                    const initialMetrics = initialMetricsEl ? JSON.parse(initialMetricsEl.textContent) : null;
+                    if (initialMetrics) render(initialMetrics);
                     refresh();
 
                     const rerenderChart = () => {

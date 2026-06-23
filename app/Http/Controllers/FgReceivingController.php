@@ -50,7 +50,8 @@ class FgReceivingController extends Controller
             'total_qty' => (int) (clone $filteredQuery)->sum('qty_box'),
         ];
 
-        return view('fg-storage.receiving', compact('scans', 'summary', 'filters'));
+        $operators = Operator::query()->orderBy('name')->get();
+        return view('fg-storage.receiving', compact('scans', 'summary', 'filters', 'operators'));
     }
 
     public function createUnregistered(Request $request): View
@@ -123,7 +124,7 @@ class FgReceivingController extends Controller
         ]);
 
         return redirect()
-            ->route('fg.storage.receiving')
+            ->back()
             ->with('success', 'Data FG Receiving berhasil diperbarui.');
     }
 
@@ -132,7 +133,7 @@ class FgReceivingController extends Controller
         $scan->delete();
 
         return redirect()
-            ->route('fg.storage.receiving')
+            ->back()
             ->with('success', 'Data FG Receiving berhasil dihapus.');
     }
 

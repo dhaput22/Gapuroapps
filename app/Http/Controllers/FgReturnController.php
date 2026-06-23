@@ -47,7 +47,8 @@ class FgReturnController extends Controller
             'total_qty' => (int) (clone $filteredQuery)->sum('qty_box'),
         ];
 
-        return view('fg-storage.return', compact('scans', 'summary', 'filters'));
+        $operators = Operator::query()->orderBy('name')->get();
+        return view('fg-storage.return', compact('scans', 'summary', 'filters', 'operators'));
     }
 
     public function create(Request $request): View
@@ -207,7 +208,7 @@ class FgReturnController extends Controller
         ]);
 
         return redirect()
-            ->route('fg.storage.return.index')
+            ->back()
             ->with('success', 'Data FG Return berhasil diperbarui.');
     }
 
@@ -216,7 +217,7 @@ class FgReturnController extends Controller
         $scan->delete();
 
         return redirect()
-            ->route('fg.storage.return.index')
+            ->back()
             ->with('success', 'Data FG Return berhasil dihapus.');
     }
 

@@ -15,7 +15,10 @@
         </p>
     </div>
 
-    <h1 class="text-center text-2xl font-semibold text-gray-700">FG Storage</h1>
+    <div class="text-center">
+        <h1 class="text-2xl font-semibold text-gray-700">FG Storage</h1>
+        <h2 class="mt-1 text-[32px] font-bold leading-tight text-gray-800">FG Return</h2>
+    </div>
 
     @if (session('success'))
     <div class="rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
@@ -121,11 +124,17 @@
             <p id="scan_hint" class="text-xs text-gray-500"></p>
             <div class="flex items-center gap-2">
                 <button type="submit"
-                    class="rounded border border-yellow-500 bg-yellow-300 px-3 py-2 text-xs font-semibold text-gray-800">
+                    class="inline-flex items-center gap-1.5 rounded border border-yellow-500 bg-yellow-300 px-3 py-2 text-xs font-semibold text-gray-800 hover:bg-yellow-400">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                     Register (Enter)
                 </button>
                 <a href="{{ route('fg.storage.return.index') }}"
-                    class="rounded border border-gray-300 bg-white px-3 py-2 text-xs text-gray-700">
+                    class="inline-flex items-center gap-1.5 rounded border border-gray-300 bg-white px-3 py-2 text-xs text-gray-700 hover:bg-gray-50">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    </svg>
                     Lihat Semua FG Return
                 </a>
             </div>

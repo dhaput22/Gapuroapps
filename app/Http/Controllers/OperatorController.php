@@ -51,8 +51,28 @@ class OperatorController extends Controller
         Operator::query()->create($validated);
 
         return redirect()
-            ->route('operators.index')
+            ->back()
             ->with('success', 'Data operator berhasil ditambahkan.');
+    }
+
+    public function edit(Operator $operator): \Illuminate\View\View
+    {
+        return view('operators.edit', compact('operator'));
+    }
+
+    public function update(Request $request, Operator $operator): RedirectResponse
+    {
+        $validated = $request->validate([
+            'employee_id' => ['required', 'string', 'max:50', \Illuminate\Validation\Rule::unique('operators', 'employee_id')->ignore($operator->id)],
+            'name' => ['required', 'string', 'max:150'],
+            'department' => ['required', 'string', 'max:100'],
+        ]);
+
+        $operator->update($validated);
+
+        return redirect()
+            ->back()
+            ->with('success', 'Data operator berhasil diperbarui.');
     }
 
     public function destroy(Operator $operator): RedirectResponse
@@ -60,7 +80,7 @@ class OperatorController extends Controller
         $operator->delete();
 
         return redirect()
-            ->route('operators.index')
+            ->back()
             ->with('success', 'Data operator berhasil dihapus.');
     }
 

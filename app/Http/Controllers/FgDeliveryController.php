@@ -48,7 +48,8 @@ class FgDeliveryController extends Controller
             'total_qty' => (int) (clone $filteredQuery)->sum('qty_box'),
         ];
 
-        return view('fg-storage.delivery', compact('scans', 'summary', 'filters'));
+        $operators = Operator::query()->orderBy('name')->get();
+        return view('fg-storage.delivery', compact('scans', 'summary', 'filters', 'operators'));
     }
 
     public function createScan(Request $request): View
@@ -240,7 +241,7 @@ class FgDeliveryController extends Controller
         ]);
 
         return redirect()
-            ->route('fg.storage')
+            ->back()
             ->with('success', 'Data FG Delivery berhasil diperbarui.');
     }
 
@@ -249,7 +250,7 @@ class FgDeliveryController extends Controller
         $scan->delete();
 
         return redirect()
-            ->route('fg.storage')
+            ->back()
             ->with('success', 'Data FG Delivery berhasil dihapus.');
     }
 

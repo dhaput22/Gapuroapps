@@ -43,7 +43,8 @@ class FgStockController extends Controller
             'total_qty' => (int) (clone $filteredQuery)->sum('qty_box'),
         ];
 
-        return view('fg-storage.stock', compact('scans', 'summary', 'filters'));
+        $operators = Operator::query()->orderBy('name')->get();
+        return view('fg-storage.stock', compact('scans', 'summary', 'filters', 'operators'));
     }
 
     public function edit(FgReceivingScan $scan): View
@@ -73,7 +74,7 @@ class FgStockController extends Controller
         ]);
 
         return redirect()
-            ->route('fg.storage.stock')
+            ->back()
             ->with('success', 'Data FG Stock berhasil diperbarui.');
     }
 
@@ -82,7 +83,7 @@ class FgStockController extends Controller
         $scan->delete();
 
         return redirect()
-            ->route('fg.storage.stock')
+            ->back()
             ->with('success', 'Data FG Stock berhasil dihapus.');
     }
 

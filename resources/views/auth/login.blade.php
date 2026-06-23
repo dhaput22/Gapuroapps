@@ -50,9 +50,9 @@
 
             <div class="flex justify-end">
 
-                <a href="{{ route('password.request') }}" class="text-sm text-blue-400 hover:underline">
+                <!-- <a href="{{ route('password.request') }}" class="text-sm text-blue-400 hover:underline">
                     Forgot Password
-                </a>
+                </a> -->
             </div>
         </form>
 

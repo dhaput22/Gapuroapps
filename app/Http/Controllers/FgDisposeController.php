@@ -47,7 +47,8 @@ class FgDisposeController extends Controller
             'total_qty' => (int) (clone $filteredQuery)->sum('qty_box'),
         ];
 
-        return view('fg-storage.dispose', compact('scans', 'summary', 'filters'));
+        $operators = Operator::query()->orderBy('name')->get();
+        return view('fg-storage.dispose', compact('scans', 'summary', 'filters', 'operators'));
     }
 
     public function create(Request $request): View
@@ -207,7 +208,7 @@ class FgDisposeController extends Controller
         ]);
 
         return redirect()
-            ->route('fg.storage.dispose.index')
+            ->back()
             ->with('success', 'Data FG Dispose berhasil diperbarui.');
     }
 
@@ -216,7 +217,7 @@ class FgDisposeController extends Controller
         $scan->delete();
 
         return redirect()
-            ->route('fg.storage.dispose.index')
+            ->back()
             ->with('success', 'Data FG Dispose berhasil dihapus.');
     }
 

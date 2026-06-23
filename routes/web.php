@@ -41,10 +41,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/fg-storage-metrics', [DashboardController::class, 'fgStorageMetrics'])->name('dashboard.fg-storage.metrics');
 
-    Route::get('/operators', [OperatorController::class, 'index'])->name('operators.index');
-    Route::post('/operators', [OperatorController::class, 'store'])->name('operators.store');
-    Route::delete('/operators/{operator}', [OperatorController::class, 'destroy'])->name('operators.destroy');
-    Route::get('/operators/preview', [OperatorController::class, 'preview'])->name('operators.preview');
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/operators', [OperatorController::class, 'index'])->name('operators.index');
+        Route::post('/operators', [OperatorController::class, 'store'])->name('operators.store');
+        Route::get('/operators/preview', [OperatorController::class, 'preview'])->name('operators.preview');
+        Route::get('/operators/{operator}/edit', [OperatorController::class, 'edit'])->name('operators.edit');
+        Route::put('/operators/{operator}', [OperatorController::class, 'update'])->name('operators.update');
+        Route::delete('/operators/{operator}', [OperatorController::class, 'destroy'])->name('operators.destroy');
+    });
 
     Route::get('/fg-storage', [FgDeliveryController::class, 'index'])->name('fg.storage');
 
@@ -119,6 +123,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
     Route::post('/admin/users', [AdminUserController::class, 'store'])->name('admin.users.store');
     Route::patch('/admin/users/{user}/role', [AdminUserController::class, 'updateRole'])->name('admin.users.update-role');
+    Route::get('/admin/users/{user}/edit', [AdminUserController::class, 'edit'])->name('admin.users.edit');
+    Route::put('/admin/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
+    Route::post('/admin/users/{user}/deactivate', [AdminUserController::class, 'deactivate'])->name('admin.users.deactivate');
+    Route::post('/admin/users/{user}/activate', [AdminUserController::class, 'activate'])->name('admin.users.activate');
+    Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
 });
 
 

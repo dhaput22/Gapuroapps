@@ -35,6 +35,30 @@
             padding-left: 0.75rem;
             padding-right: 0.75rem;
         }
+
+        @keyframes notif-in {
+            from {
+                opacity: 0;
+                transform: translateX(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes notif-out {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateX(40px);
+            }
+        }
     </style>
 </head>
 
@@ -90,6 +114,7 @@
                             </a>
                         </li>
 
+                        @if (auth()->user()?->isAdmin())
                         <li class="border-t">
                             <a href="{{ route('operators.index') }}" title="Operator" class="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-gray-50 sidebar-item-on-collapse">
                                 <span class="flex items-center gap-2">
@@ -100,18 +125,19 @@
                                 </span>
                             </a>
                         </li>
+                        @endif
 
                         @if (auth()->user()?->isAdmin())
-                            <li class="border-t">
-                                <a href="{{ route('admin.users.index') }}" title="Manajemen User" class="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-gray-50 sidebar-item-on-collapse">
-                                    <span class="flex items-center gap-2">
-                                        <svg class="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                        </svg>
-                                        <span class="sidebar-hide-on-collapse">Manajemen User</span>
-                                    </span>
-                                </a>
-                            </li>
+                        <li class="border-t">
+                            <a href="{{ route('admin.users.index') }}" title="Manajemen User" class="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-gray-50 sidebar-item-on-collapse">
+                                <span class="flex items-center gap-2">
+                                    <svg class="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                    <span class="sidebar-hide-on-collapse">User Management</span>
+                                </span>
+                            </a>
+                        </li>
                         @endif
 
                         <!-- <li class="border-t">
@@ -186,7 +212,7 @@
 
             <!-- content -->
             <main class="flex-1 p-6">
-                <div class="bg-white rounded shadow-sm p-6 min-h-[60vh] relative">
+                <div class="bg-white rounded shadow-sm p-6 relative">
                     @yield('content')
                 </div>
             </main>
@@ -196,6 +222,9 @@
             </footer>
         </div>
     </div>
+
+    {{-- Capacity notification toast container --}}
+    <div id="capacity-notif-container" style="position:fixed;top:1rem;right:1rem;z-index:9999;display:flex;flex-direction:column;gap:0.5rem;pointer-events:none;max-width:380px;width:calc(100vw - 2rem)"></div>
 
     {{-- Flyout panel (hidden by default) --}}
     <div id="flyout" class="hidden fixed left-72 top-32 w-64 bg-white border shadow-lg z-50">
@@ -471,7 +500,27 @@
                 menu.classList.add('hidden');
             }
         });
+
+        // Prevent href="#" links from scrolling to top (e.g. disabled pagination buttons)
+        document.addEventListener('click', function(e) {
+            const a = e.target.closest('a');
+            if (a && a.getAttribute('href') === '#') {
+                e.preventDefault();
+            }
+        }, true);
+
+        // Lock/unlock body scroll for modals while preserving user's scroll position
+        let _gapuroScrollY = 0;
+        function gapuroLockScroll() {
+            _gapuroScrollY = window.scrollY;
+            document.body.style.overflow = 'hidden';
+        }
+        function gapuroUnlockScroll() {
+            document.body.style.overflow = '';
+            window.scrollTo(0, _gapuroScrollY);
+        }
     </script>
+    @stack('scripts')
 </body>
 
 </html>

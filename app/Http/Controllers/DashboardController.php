@@ -32,10 +32,7 @@ class DashboardController extends Controller
         $startDate = $now->copy()->subDays(self::TREND_DAYS - 1)->toDateString();
         $endDate = $today;
 
-        $receivingToday = $this->sumSummary(
-            $this->dailySummary('fg_receiving_scans', self::RECEIVE_DATE_EXPRESSION, $today),
-            $this->dailySummary('fg_delivery_scans', self::RECEIVE_DATE_EXPRESSION, $today)
-        );
+        $receivingToday = $this->dailySummary('fg_receiving_scans', self::RECEIVE_DATE_EXPRESSION, $today);
         $deliveryToday = $this->dailySummary('fg_delivery_scans', self::DELIVERY_DATE_EXPRESSION, $today);
 
         $receivingOpenTotal = $this->tableSummary('fg_receiving_scans');
