@@ -64,6 +64,9 @@
 
 <body class="h-full bg-gray-100 text-gray-800">
 
+    {{-- Capacity notification toast container (must exist before page scripts run, so the very first check can render its toast) --}}
+    <div id="capacity-notif-container" style="position:fixed;top:1rem;right:1rem;z-index:9999;display:flex;flex-direction:column;gap:0.5rem;pointer-events:none;max-width:380px;width:calc(100vw - 2rem)"></div>
+
     <div id="appShell" class="min-h-screen flex">
         <!-- SIDEBAR -->
         <aside id="sidebar" class="sticky top-0 h-screen overflow-y-auto bg-gray-50 border-r border-gray-200">
@@ -182,7 +185,7 @@
 
                         <div class="text-right text-xs">
                             <div class="text-gray-500">Login : {{ now()->format('Y-m-d H:i') }}</div>
-                            <div class="text-gray-700 font-medium">{{ auth()->user()->username ?? 'guest' }}</div>
+                            <div class="text-gray-700 font-medium">{{ auth()->user()->name ?? 'guest' }}</div>
                             <div class="text-[11px] text-gray-500">{{ auth()->user()->role_label ?? '-' }}</div>
                         </div>
 
@@ -222,9 +225,6 @@
             </footer>
         </div>
     </div>
-
-    {{-- Capacity notification toast container --}}
-    <div id="capacity-notif-container" style="position:fixed;top:1rem;right:1rem;z-index:9999;display:flex;flex-direction:column;gap:0.5rem;pointer-events:none;max-width:380px;width:calc(100vw - 2rem)"></div>
 
     {{-- Flyout panel (hidden by default) --}}
     <div id="flyout" class="hidden fixed left-72 top-32 w-64 bg-white border shadow-lg z-50">
@@ -511,10 +511,12 @@
 
         // Lock/unlock body scroll for modals while preserving user's scroll position
         let _gapuroScrollY = 0;
+
         function gapuroLockScroll() {
             _gapuroScrollY = window.scrollY;
             document.body.style.overflow = 'hidden';
         }
+
         function gapuroUnlockScroll() {
             document.body.style.overflow = '';
             window.scrollTo(0, _gapuroScrollY);

@@ -30,55 +30,61 @@
     @endif
 
     {{-- Filter --}}
+    @php
+        $dtFrom = $filters['date_from'] ?? '';
+        if (strlen($dtFrom) === 10) $dtFrom .= 'T00:00';
+        $dtTo = $filters['date_to'] ?? '';
+        if (strlen($dtTo) === 10) $dtTo .= 'T23:59';
+    @endphp
     <form method="GET" action="{{ route('fg.storage.summary-stock') }}"
-        class="rounded border border-gray-200 bg-gray-100 px-4 py-3">
+        class="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
 
         <div class="mb-2 flex flex-wrap items-center gap-2">
-            <span class="w-20 text-gray-600">Date Filter</span>
+            <span class="min-w-[80px] text-sm font-medium text-gray-600">Date Filter</span>
 
-            <input type="date" name="date_from" value="{{ $filters['date_from'] }}"
-                class="h-9 rounded border border-gray-300 bg-white px-2 text-sm">
+            <input type="datetime-local" name="date_from" value="{{ $dtFrom }}"
+                class="h-9 rounded border border-gray-300 bg-white px-2 text-sm focus:border-yellow-400 focus:outline-none focus:ring-1 focus:ring-yellow-300">
 
-            <span class="text-xs text-gray-500">To</span>
+            <span class="text-xs font-medium text-gray-400">To</span>
 
-            <input type="date" name="date_to" value="{{ $filters['date_to'] }}"
-                class="h-9 rounded border border-gray-300 bg-white px-2 text-sm">
+            <input type="datetime-local" name="date_to" value="{{ $dtTo }}"
+                class="h-9 rounded border border-gray-300 bg-white px-2 text-sm focus:border-yellow-400 focus:outline-none focus:ring-1 focus:ring-yellow-300">
 
-            <span class="ml-4 text-gray-600">Search By</span>
+            <div class="mx-1 h-5 w-px bg-gray-200"></div>
 
-            <select name="search_by" class="h-9 rounded border border-yellow-400 bg-yellow-300 px-2 pr-8 text-sm">
+            <select name="search_by" class="h-9 rounded border border-yellow-400 bg-yellow-300 px-2 pr-8 text-sm font-medium focus:outline-none">
                 <option value="">Search By</option>
                 <option value="part_code" {{ $filters['search_by'] === 'part_code' ? 'selected' : '' }}>Part Code</option>
                 <option value="part_name" {{ $filters['search_by'] === 'part_name' ? 'selected' : '' }}>Part Name</option>
             </select>
 
             <input type="text" name="keyword" value="{{ $filters['keyword'] }}" placeholder="Input Keyword"
-                class="h-9 w-44 rounded border border-gray-300 bg-white px-2 text-sm">
+                class="h-9 w-44 rounded border border-gray-300 bg-white px-2 text-sm focus:border-yellow-400 focus:outline-none focus:ring-1 focus:ring-yellow-300">
 
-            <button type="submit" class="h-9 rounded bg-yellow-400 px-3 text-xs font-semibold text-gray-800 hover:bg-yellow-500">
+            <button type="submit" class="h-9 rounded bg-yellow-400 px-4 text-xs font-semibold text-gray-800 hover:bg-yellow-500">
                 Search
             </button>
             <a href="{{ route('fg.storage.summary-stock') }}"
-                class="h-9 rounded border border-gray-300 bg-white px-3 py-2 text-xs text-gray-700">
+                class="h-9 rounded border border-gray-300 bg-white px-3 py-2 text-xs text-gray-600 hover:bg-gray-50">
                 Reset
             </a>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-            <span class="w-20 text-gray-600">Total Row</span>
-            <input type="text" readonly value="{{ $summary['total_row'] }}" class="h-7 w-12 rounded border border-gray-300 bg-white px-2 text-sm">
+        <div class="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-2">
+            <span class="text-xs text-gray-500">Total Row</span>
+            <input type="text" readonly value="{{ $summary['total_row'] }}" class="h-7 w-14 rounded border border-gray-200 bg-gray-50 px-2 text-center text-xs font-semibold text-gray-700">
 
-            <span class="ml-3 text-gray-600">Page Size</span>
+            <span class="text-xs text-gray-500">Page Size</span>
             <input type="number" min="1" max="100" name="page_size" value="{{ $filters['page_size'] }}"
-                class="h-7 w-12 rounded border border-gray-300 bg-white px-2 text-sm">
+                class="h-7 w-14 rounded border border-gray-300 bg-white px-2 text-center text-xs focus:outline-none">
 
-            <span class="ml-3 text-gray-600">Page No</span>
+            <span class="text-xs text-gray-500">Page No</span>
             <input type="number" min="1" name="page" value="{{ $scans->currentPage() }}"
-                class="h-7 w-12 rounded border border-gray-300 bg-white px-2 text-sm">
+                class="h-7 w-14 rounded border border-gray-300 bg-white px-2 text-center text-xs focus:outline-none">
 
-            <button type="submit" class="h-7 rounded bg-yellow-400 px-2 text-xs text-gray-800">Apply</button>
-            <div class="ml-3 text-xs text-gray-600">
-                Total Qty : <strong>{{ number_format($summary['total_qty']) }}</strong>
+            <button type="submit" class="h-7 rounded bg-yellow-400 px-3 text-xs font-semibold text-gray-800 hover:bg-yellow-500">Apply</button>
+            <div class="text-xs text-gray-500">
+                Total Qty : <strong class="text-gray-700">{{ number_format($summary['total_qty']) }}</strong>
             </div>
         </div>
     </form>

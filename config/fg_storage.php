@@ -1,23 +1,23 @@
 <?php
 
 return [
-    'warehouse_capacity_box' => (int) env('FG_STORAGE_CAPACITY_BOX', 100000),
+    'warehouse_capacity_box' => (int) env('FG_STORAGE_CAPACITY_BOX', 500000),
     'dashboard_polling_seconds' => (int) env('FG_STORAGE_DASHBOARD_POLLING_SECONDS', 2),
     'item_type_capacities' => [
         ['key' => 'bottle_20ml', 'label' => 'Bottle 20ml', 'capacity_box' => 16665, 'aliases' => ['BOTTLE20', 'BOTTLE,20']],
         ['key' => 'bottle_40ml', 'label' => 'Bottle 40ml', 'capacity_box' => 16665, 'aliases' => ['BOTTLE40', 'BOTTLE,40']],
-        ['key' => 'bottle_70ml', 'label' => 'Bottle 70ml', 'capacity_box' => 5700, 'aliases' => ['BOTTLE70', 'BOTTLE,70']],
+        ['key' => 'bottle_70ml', 'label' => 'Bottle 70ml', 'capacity_box' => 24000, 'aliases' => ['BOTTLE70', 'BOTTLE,70']],
         ['key' => 'part_return', 'label' => 'PART RETURN', 'capacity_box' => 5000],
         ['key' => 'prism_inj', 'label' => 'PRISM INJ', 'capacity_box' => 15700],
         ['key' => 'sakura', 'label' => 'SAKURA', 'capacity_box' => 21000],
-        ['key' => 'n3_cover_m', 'label' => 'N3 COVER M', 'capacity_box' => 30000],
+        ['key' => 'n3_cover_m', 'label' => 'N3 COVER M', 'capacity_box' => 100000],
         ['key' => 'n3_cover', 'label' => 'N3 COVER', 'capacity_box' => 50000],
         ['key' => 'nasuno_3_case', 'label' => 'NASUNO 3 CASE', 'capacity_box' => 18000],
         ['key' => 'n3_case_m1_m2', 'label' => 'N3 CASE M1, M2', 'capacity_box' => 10000],
         ['key' => 'craig_case_l', 'label' => 'CRAIG CASE L', 'capacity_box' => 23000],
-        ['key' => 'craig_case_s_456', 'label' => 'CRAIG CASE S 4,5,6', 'capacity_box' => 5000],
+        ['key' => 'craig_case_s_456', 'label' => 'CRAIG CASE S 4,5,6', 'capacity_box' => 15000],
         ['key' => 'ha3p_case_s2_m', 'label' => 'HA3P CASE S2 / M', 'capacity_box' => 8000],
-        ['key' => 'ha3p_case_s2', 'label' => 'HA3P CASE S2', 'capacity_box' => 7000],
+        ['key' => 'ha3p_case_s2', 'label' => 'HA3P CASE S2', 'capacity_box' => 17000],
         ['key' => 'ink_bottle_cap', 'label' => 'INK BOTTLE CAP', 'capacity_box' => 32000],
         ['key' => 'top_cap', 'label' => 'TOP CAP', 'capacity_box' => 70000],
         ['key' => 'hamana_glee', 'label' => 'HAMANA GLEE', 'capacity_box' => 12000],

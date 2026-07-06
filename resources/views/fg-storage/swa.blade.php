@@ -54,28 +54,30 @@
     };
     @endphp
 
-    <form method="GET" action="{{ route('fg.storage.swa') }}" class="rounded border border-gray-200 bg-gray-100 px-4 py-3">
+    @php
+    $dtFrom = $filters['date_from'] ?? '';
+    if (strlen($dtFrom) === 10) $dtFrom .= 'T00:00';
+    $dtTo = $filters['date_to'] ?? '';
+    if (strlen($dtTo) === 10) $dtTo .= 'T23:59';
+    @endphp
+    <form method="GET" action="{{ route('fg.storage.swa') }}" class="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
         <input type="hidden" name="sort_by" value="{{ $currentSortBy }}">
         <input type="hidden" name="sort_dir" value="{{ $currentSortDir }}">
 
         <div class="mb-2 flex flex-wrap items-center gap-2">
-            <span class="w-20 text-gray-600">Date Filter</span>
+            <span class="min-w-[80px] text-sm font-medium text-gray-600">Date Filter</span>
 
-            <select name="date_filter" class="h-9 rounded border border-yellow-400 bg-yellow-300 px-2 pr-8 text-sm">
-                <option value="created_at" {{ ($filters['date_filter'] ?? '') === 'created_at' ? 'selected' : '' }}>
-                    Injection Date
-                </option>
-            </select>
+            <input type="datetime-local" name="date_from" value="{{ $dtFrom }}"
+                class="h-9 rounded border border-gray-300 bg-white px-2 text-sm focus:border-yellow-400 focus:outline-none focus:ring-1 focus:ring-yellow-300">
 
-            <input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}"
-                class="h-9 rounded border border-gray-300 bg-white px-2 text-sm">
-            <span class="text-xs text-gray-500">To</span>
-            <input type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}"
-                class="h-9 rounded border border-gray-300 bg-white px-2 text-sm">
+            <span class="text-xs font-medium text-gray-400">To</span>
 
-            <span class="ml-4 text-gray-600">Search By</span>
+            <input type="datetime-local" name="date_to" value="{{ $dtTo }}"
+                class="h-9 rounded border border-gray-300 bg-white px-2 text-sm focus:border-yellow-400 focus:outline-none focus:ring-1 focus:ring-yellow-300">
 
-            <select name="search_by" class="h-9 rounded border border-yellow-400 bg-yellow-300 px-2 pr-8 text-sm">
+            <div class="mx-1 h-5 w-px bg-gray-200"></div>
+
+            <select name="search_by" class="h-9 rounded border border-yellow-400 bg-yellow-300 px-2 pr-8 text-sm font-medium focus:outline-none">
                 <option value="">Search By</option>
                 <option value="part_code" {{ ($filters['search_by'] ?? '') === 'part_code' ? 'selected' : '' }}>Part Code</option>
                 <option value="part_name" {{ ($filters['search_by'] ?? '') === 'part_name' ? 'selected' : '' }}>Part Name</option>
@@ -84,30 +86,30 @@
             </select>
 
             <input type="text" name="keyword" value="{{ $filters['keyword'] ?? '' }}" placeholder="Input Keyword"
-                class="h-9 w-44 rounded border border-gray-300 bg-white px-2 text-sm">
+                class="h-9 w-44 rounded border border-gray-300 bg-white px-2 text-sm focus:border-yellow-400 focus:outline-none focus:ring-1 focus:ring-yellow-300">
 
-            <button type="submit" class="h-9 rounded bg-yellow-400 px-3 text-xs font-semibold text-gray-900 hover:bg-yellow-500">
+            <button type="submit" class="h-9 rounded bg-yellow-400 px-4 text-xs font-semibold text-gray-800 hover:bg-yellow-500">
                 Search
             </button>
-            <a href="{{ route('fg.storage.swa') }}" class="h-9 rounded border border-gray-300 bg-white px-3 py-2 text-xs text-gray-700">
+            <a href="{{ route('fg.storage.swa') }}" class="h-9 rounded border border-gray-300 bg-white px-3 py-2 text-xs text-gray-600 hover:bg-gray-50">
                 Reset
             </a>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-            <span class="w-20 text-gray-600">Total Row</span>
+        <div class="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-2">
+            <span class="text-xs text-gray-500">Total Row</span>
             <input type="text" readonly value="{{ $plans->total() }}"
-                class="h-7 w-12 rounded border border-gray-300 bg-white px-2 text-sm">
+                class="h-7 w-14 rounded border border-gray-200 bg-gray-50 px-2 text-center text-xs font-semibold text-gray-700">
 
-            <span class="ml-3 text-gray-600">Page Size</span>
+            <span class="text-xs text-gray-500">Page Size</span>
             <input type="number" min="1" max="100" name="page_size" value="{{ $filters['page_size'] ?? 10 }}"
-                class="h-7 w-14 rounded border border-gray-300 bg-white px-2 text-sm">
+                class="h-7 w-14 rounded border border-gray-300 bg-white px-2 text-center text-xs focus:outline-none">
 
-            <span class="ml-3 text-gray-600">Page No</span>
+            <span class="text-xs text-gray-500">Page No</span>
             <input type="number" min="1" name="page" value="{{ $plans->currentPage() }}"
-                class="h-7 w-14 rounded border border-gray-300 bg-white px-2 text-sm">
+                class="h-7 w-14 rounded border border-gray-300 bg-white px-2 text-center text-xs focus:outline-none">
 
-            <button type="submit" class="h-7 rounded bg-yellow-400 px-2 text-xs text-gray-800">Apply</button>
+            <button type="submit" class="h-7 rounded bg-yellow-400 px-3 text-xs font-semibold text-gray-800 hover:bg-yellow-500">Apply</button>
         </div>
     </form>
 
@@ -215,7 +217,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
                             </button>
-                            <form method="POST" action="{{ route('fg.storage.swa.destroy', $plan) }}" onsubmit="return confirm('Hapus plan ini?');">
+                            <form method="POST" action="{{ route('fg.storage.swa.destroy', $plan) }}" onsubmit="return confirm('Are you sure you want to delete this plan?');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" title="Hapus"
@@ -337,36 +339,36 @@
 
 @push('scripts')
 <script>
-const editModal = document.getElementById('editModal');
-const editForm = document.getElementById('editModal-form');
+    const editModal = document.getElementById('editModal');
+    const editForm = document.getElementById('editModal-form');
 
-function openEditModal(btn) {
-    const d = btn.dataset;
-    editForm.action = d.updateUrl;
-    document.getElementById('editModalUrl').value = d.updateUrl;
-    document.getElementById('modal-part-code').value = d.partCode || '';
-    document.getElementById('modal-part-name').value = d.partName || '';
-    document.getElementById('modal-start-lot-no').value = d.startLotNo || '';
-    document.getElementById('modal-end-lot-no').value = d.endLotNo || '';
-    document.getElementById('modal-qty-box').value = d.qtyBox || '';
-    document.getElementById('modal-total-plan').value = d.totalPlan || '';
+    function openEditModal(btn) {
+        const d = btn.dataset;
+        editForm.action = d.updateUrl;
+        document.getElementById('editModalUrl').value = d.updateUrl;
+        document.getElementById('modal-part-code').value = d.partCode || '';
+        document.getElementById('modal-part-name').value = d.partName || '';
+        document.getElementById('modal-start-lot-no').value = d.startLotNo || '';
+        document.getElementById('modal-end-lot-no').value = d.endLotNo || '';
+        document.getElementById('modal-qty-box').value = d.qtyBox || '';
+        document.getElementById('modal-total-plan').value = d.totalPlan || '';
+        editModal.style.display = 'block';
+        gapuroLockScroll();
+    }
+
+    function closeEditModal() {
+        editModal.style.display = 'none';
+        gapuroUnlockScroll();
+    }
+
+    editModal.addEventListener('click', function(e) {
+        if (e.target === this) closeEditModal();
+    });
+
+    @if($errors -> any() && old('_edit_url'))
     editModal.style.display = 'block';
     gapuroLockScroll();
-}
-
-function closeEditModal() {
-    editModal.style.display = 'none';
-    gapuroUnlockScroll();
-}
-
-editModal.addEventListener('click', function(e) {
-    if (e.target === this) closeEditModal();
-});
-
-@if($errors->any() && old('_edit_url'))
-editModal.style.display = 'block';
-gapuroLockScroll();
-@endif
+    @endif
 </script>
 @endpush
 @endsection

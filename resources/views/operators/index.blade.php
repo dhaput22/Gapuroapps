@@ -134,7 +134,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
                             </button>
-                            <form method="POST" action="{{ route('operators.destroy', $operator) }}" class="inline" onsubmit="return confirm('Hapus operator ini secara permanen? Tindakan ini tidak dapat dibatalkan.')">
+                            <form method="POST" action="{{ route('operators.destroy', $operator) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this plan? Permanently delete this operator? This action cannot be undone.')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" title="Hapus Operator" class="inline-flex items-center justify-center rounded border border-gray-400 bg-gray-100 p-1.5 text-gray-600 hover:bg-gray-200 transition">

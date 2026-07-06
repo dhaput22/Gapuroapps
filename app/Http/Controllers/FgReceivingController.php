@@ -15,7 +15,7 @@ use Illuminate\View\View;
 class FgReceivingController extends Controller
 {
     private const UNREGISTERED_SCAN_IDS_SESSION_KEY = 'fg_receiving_unregistered_scan_ids';
-    private const LOT_NO_INVALID_MESSAGE = 'Lot No salah, tidak sesuai dengan plan FG for SWA.';
+    private const LOT_NO_INVALID_MESSAGE = 'Lot No. is wrong, does not match the FG plan for SWA.';
 
     public function index(Request $request): View
     {
@@ -125,7 +125,7 @@ class FgReceivingController extends Controller
 
         return redirect()
             ->back()
-            ->with('success', 'Data FG Receiving berhasil diperbarui.');
+            ->with('success', 'FG Receiving data has been successfully updated.');
     }
 
     public function destroy(FgReceivingScan $scan): RedirectResponse
@@ -134,7 +134,7 @@ class FgReceivingController extends Controller
 
         return redirect()
             ->back()
-            ->with('success', 'Data FG Receiving berhasil dihapus.');
+            ->with('success', 'FG Receiving data has been successfully deleted.');
     }
 
     public function storeUnregistered(Request $request): RedirectResponse
@@ -196,7 +196,7 @@ class FgReceivingController extends Controller
                     'part_code' => $scan->part_code,
                     'operator_employee_id' => $operator->employee_id,
                 ])
-                ->with('success', 'Pembatalan pengiriman berhasil. Barang dikembalikan ke FG Receiving.');
+                ->with('success', 'Cancellation of shipment successful. Item returned to FG Receiving.');
         }
 
         [$selectedPlan, $errorMessage] = $this->resolvePlanForScan($partCode, $lotNo);
@@ -204,20 +204,20 @@ class FgReceivingController extends Controller
         if ($selectedPlan === null) {
             $errorField = $errorMessage === self::LOT_NO_INVALID_MESSAGE ? 'lot_no' : 'part_code';
             return back()
-                ->withErrors([$errorField => $errorMessage ?? 'Plan untuk part ini sudah terpenuhi atau lot range sudah habis.'])
+                ->withErrors([$errorField => $errorMessage ?? 'Plan for this part has already been fulfilled or the lot range has been exhausted.'])
                 ->withInput();
         }
 
         if ($this->isDuplicateLotScan($partCode, $lotNo)) {
             return back()
-                ->withErrors(['lot_no' => 'Lot No ini sudah pernah discan untuk part code tersebut.'])
+                ->withErrors(['lot_no' => 'Lot No. has already been scanned for this part code.'])
                 ->withInput();
         }
 
         $currentTotalScan = $this->calculateTotalScanForPlan($selectedPlan);
         if ($currentTotalScan + (int) $selectedPlan->qty_box > (int) $selectedPlan->total_plan) {
             return back()
-                ->withErrors(['part_code' => 'Total scan plan sudah mencapai batas total plan.'])
+                ->withErrors(['part_code' => 'Total scan plan has already reached the total plan limit.'])
                 ->withInput();
         }
 
@@ -248,7 +248,7 @@ class FgReceivingController extends Controller
                 'part_code' => $selectedPlan->part_code,
                 'operator_employee_id' => $operator->employee_id,
             ])
-            ->with('success', 'Scan part berhasil diregister ke FG Receiving.');
+            ->with('success', 'Scan part has been successfully registered to FG Receiving.');
     }
 
     public function previewUnregisteredPlan(Request $request): JsonResponse
@@ -258,7 +258,7 @@ class FgReceivingController extends Controller
 
         if ($partCode === '' || $lotNo === '') {
             return response()->json([
-                'message' => 'Part Code dan Lot No wajib diisi.',
+                'message' => 'Part Code and Lot No are required.',
             ], 422);
         }
 
@@ -269,7 +269,7 @@ class FgReceivingController extends Controller
                 'part_name' => $deliveryScan->part_name,
                 'lot_no' => $deliveryScan->lot_no,
                 'qty_box' => (int) $deliveryScan->qty_box,
-                'message' => 'Lot ini ada di FG Delivery. Submit untuk pembatalan pengiriman dan kembalikan ke FG Receiving.',
+                'message' => 'Lot is already in FG Delivery. Submit for cancellation of shipment and return to FG Receiving.',
                 'action' => 'CANCEL_DELIVERY',
             ]);
         }
@@ -277,13 +277,13 @@ class FgReceivingController extends Controller
         [$plan, $errorMessage] = $this->resolvePlanForScan($partCode, $lotNo);
         if ($plan === null) {
             return response()->json([
-                'message' => $errorMessage ?? 'Plan FG for SWA tidak ditemukan.',
+                'message' => $errorMessage ?? 'Plan FG for SWA not found.',
             ], 422);
         }
 
         if ($this->isDuplicateLotScan($partCode, $lotNo)) {
             return response()->json([
-                'message' => 'Lot No ini sudah pernah discan.',
+                'message' => 'Lot No has already been scanned for this part code.',
             ], 422);
         }
 
@@ -291,7 +291,7 @@ class FgReceivingController extends Controller
         $nextTotalScan = $currentTotalScan + (int) $plan->qty_box;
         if ($nextTotalScan > (int) $plan->total_plan) {
             return response()->json([
-                'message' => 'Total scan plan sudah mencapai batas total plan.',
+                'message' => 'Total scan plan has already reached the total plan limit.',
             ], 422);
         }
 
@@ -310,7 +310,7 @@ class FgReceivingController extends Controller
         $partCode = trim((string) $request->query('part_code', ''));
         if ($partCode === '') {
             return response()->json([
-                'message' => 'Part Code wajib diisi.',
+                'message' => 'Part Code is required.',
             ], 422);
         }
 
@@ -334,13 +334,13 @@ class FgReceivingController extends Controller
                 'part_code' => $deliveryScan->part_code,
                 'part_name' => $deliveryScan->part_name,
                 'qty_box' => (int) $deliveryScan->qty_box,
-                'message' => 'Part ditemukan di FG Delivery. Lanjut scan Lot No untuk pembatalan pengiriman.',
+                'message' => 'Part found in FG Delivery. Continue scanning Lot No for shipment cancellation.',
                 'source' => 'delivery',
             ]);
         }
 
         return response()->json([
-            'message' => $errorMessage ?? 'Part Code belum terdaftar pada plan.',
+            'message' => $errorMessage ?? 'Part Code not found in the plan.',
         ], 422);
     }
 
@@ -349,8 +349,8 @@ class FgReceivingController extends Controller
         $query = FgReceivingScan::query()->with('operator');
 
         $today = now()->format('Y-m-d');
-        $dateFrom = (string) $request->input('date_from', $today);
-        $dateTo = (string) $request->input('date_to', $today);
+        $dateFrom = substr((string) $request->input('date_from', $today), 0, 10);
+        $dateTo = substr((string) $request->input('date_to', $today), 0, 10);
         if ($this->isDateString($dateFrom) && $this->isDateString($dateTo)) {
             if ($dateFrom > $dateTo) {
                 [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
@@ -388,7 +388,7 @@ class FgReceivingController extends Controller
         $candidatePlans = $this->plansByPartCode($partCode);
 
         if ($candidatePlans->isEmpty()) {
-            return [null, 'Part code belum terdaftar pada Plan FG for SWA.'];
+            return [null, 'Part code is not yet registered in Plan FG for SWA.'];
         }
 
         foreach ($candidatePlans as $plan) {
@@ -404,7 +404,7 @@ class FgReceivingController extends Controller
     {
         $candidatePlans = $this->plansByPartCode($partCode);
         if ($candidatePlans->isEmpty()) {
-            return [null, 'Part code belum terdaftar pada Plan FG for SWA.'];
+            return [null, 'Part code is not yet registered in Plan FG for SWA.'];
         }
 
         foreach ($candidatePlans as $plan) {

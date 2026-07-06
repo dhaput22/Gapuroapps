@@ -329,7 +329,7 @@
                             <p class="text-[10px] text-slate-500">pcs</p>
                         </article>
                         <article class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                            <p class="text-slate-500">Reminder</p>
+                            <p class="text-slate-500">Remainder</p>
                             <p id="fg-map-selected-available" class="fg-map-info-value text-emerald-700">0</p>
                             <p class="text-[10px] text-slate-500">pcs</p>
                         </article>
@@ -363,7 +363,6 @@
                 <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-emerald-700">Low Utilization</span>
                 <span class="rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-amber-700">Medium Utilization</span>
                 <span class="rounded-full border border-rose-200 bg-rose-50 px-2 py-1 text-rose-700">High / Over Capacity</span>
-                <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-slate-600">Klik zona untuk detail</span>
             </div>
         </section>
 
@@ -384,7 +383,7 @@
         <section
             id="fg-live-dashboard"
             data-endpoint="{{ route('dashboard.fg-storage.metrics') }}"
-            data-polling-ms="{{ ((int) data_get($fgMetrics, 'meta.polling_seconds', 2) * 1000) }}"
+            data-polling-ms="{{ ((int) data_get($fgMetrics, 'meta.polling_seconds', 1) * 1000) }}"
             class="order-1 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -581,8 +580,8 @@
                         <div style="width:100%;font-size:10px;color:#8a7050;line-height:1.7;margin-top:2px">
                             <div style="display:flex;justify-content:space-between"><span>Stock</span><span style="color:#3b2e1a;font-weight:700">{{ number_format($stockQty) }}</span></div>
                             @if ($capacityQty !== null)
-                                <div style="display:flex;justify-content:space-between"><span>Cap</span><span style="color:#3b2e1a;font-weight:700">{{ number_format($capacityQty) }}</span></div>
-                                <div style="display:flex;justify-content:space-between"><span>Sisa</span><span style="color:{{ $availColor }};font-weight:700">{{ number_format($availableQty) }}</span></div>
+                                <div style="display:flex;justify-content:space-between"><span>Capacity</span><span style="color:#3b2e1a;font-weight:700">{{ number_format($capacityQty) }}</span></div>
+                                <div style="display:flex;justify-content:space-between"><span>Remainder</span><span style="color:{{ $availColor }};font-weight:700">{{ number_format($availableQty) }}</span></div>
                             @endif
                         </div>
                         @if ($hasCapacity)
@@ -614,6 +613,42 @@
                     const trendTooltip = document.getElementById('fg-trend-tooltip');
                     const mapRoot = document.getElementById('fg-storage-map');
                     const mapZones = mapRoot ? Array.from(mapRoot.querySelectorAll('.zone')) : [];
+
+                    // Assign a stable zone letter (A, B, C, ... Z, AA, AB, ...) to each unique
+                    // item type, ordered by its leftmost position on the storage map (left → right).
+                    // The same item type always maps to the same letter, wherever it repeats on the map.
+                    const zoneKeyLetters = (() => {
+                        const seen = new Map();
+                        mapZones.forEach((zone, index) => {
+                            const key = String(zone.dataset.zoneKey || '').trim();
+                            if (key === '') return;
+                            const left = parseFloat(zone.style.left) || 0;
+                            const existing = seen.get(key);
+                            if (!existing || left < existing.left) {
+                                seen.set(key, { left, order: existing ? existing.order : index });
+                            }
+                        });
+
+                        const toLetters = (zeroBasedIndex) => {
+                            let n = zeroBasedIndex + 1;
+                            let label = '';
+                            while (n > 0) {
+                                const rem = (n - 1) % 26;
+                                label = String.fromCharCode(65 + rem) + label;
+                                n = Math.floor((n - 1) / 26);
+                            }
+                            return label;
+                        };
+
+                        const orderedKeys = Array.from(seen.entries())
+                            .sort((a, b) => (a[1].left - b[1].left) || (a[1].order - b[1].order))
+                            .map(([key]) => key);
+
+                        const labels = new Map();
+                        orderedKeys.forEach((key, idx) => labels.set(key, toLetters(idx)));
+                        return labels;
+                    })();
+
                     const selectedAvailable = document.getElementById('fg-map-selected-available');
                     const selectedUsed = document.getElementById('fg-map-selected-used');
                     const selectedBar = document.getElementById('fg-map-selected-bar');
@@ -731,7 +766,7 @@
                                 if (lvl !== prev) {
                                     if (lvl === 'over') {
                                         playSound('over');
-                                        showToast('over', `${item.label} — OVER CAPACITY`, `Stock exceeds capacity by ${formatter.format(item.excess_qty ?? 0)} boxes (${ip.toFixed(1)}% used)`);
+                                        showToast('over', `${item.label} — OVER CAPACITY`, `Stock exceeds capacity by ${formatter.format(item.excess_qty ?? 0)} pcs (${ip.toFixed(1)}% used)`);
                                     } else if (lvl === 'warn') {
                                         playSound('warn');
                                         showToast('warn', `${item.label} — Approaching Limit`, `Capacity almost full — ${ip.toFixed(1)}% used`);
@@ -848,6 +883,11 @@
                         mapZones.forEach((mapZone) => mapZone.classList.remove('active'));
                         if (zone) {
                             zone.classList.add('active');
+                        }
+
+                        if (zoneTotal) {
+                            const zoneKey = zone ? String(zone.dataset.zoneKey || '').trim() : '';
+                            zoneTotal.textContent = zoneKey !== '' ? (zoneKeyLetters.get(zoneKey) || '-') : '-';
                         }
 
                         if (!zone || !zoneStat) {
@@ -968,9 +1008,6 @@
                             0 :
                             capacityRows.reduce((acc, row) => acc + safeNumber(row?.used_percent), 0) / capacityRows.length;
 
-                        if (zoneTotal) {
-                            zoneTotal.textContent = formatter.format(capacityRows.length);
-                        }
                         if (zoneOver) {
                             zoneOver.textContent = formatter.format(overCount);
                         }
@@ -1104,8 +1141,8 @@
                                 ${badge}
                                 <div style="width:100%;font-size:10px;color:#8a7050;line-height:1.7;margin-top:2px">
                                     <div style="display:flex;justify-content:space-between"><span>Stock</span><span style="color:#3b2e1a;font-weight:700">${formatter.format(stockQty)}</span></div>
-                                    ${hasCapacity ? `<div style="display:flex;justify-content:space-between"><span>Cap</span><span style="color:#3b2e1a;font-weight:700">${formatter.format(capacityQty)}</span></div>` : ''}
-                                    ${hasCapacity ? `<div style="display:flex;justify-content:space-between"><span>Sisa</span><span style="color:${availColor};font-weight:700">${formatter.format(availableQty)}</span></div>` : ''}
+                                    ${hasCapacity ? `<div style="display:flex;justify-content:space-between"><span>Capacity</span><span style="color:#3b2e1a;font-weight:700">${formatter.format(capacityQty)}</span></div>` : ''}
+                                    ${hasCapacity ? `<div style="display:flex;justify-content:space-between"><span>Remainder</span><span style="color:${availColor};font-weight:700">${formatter.format(availableQty)}</span></div>` : ''}
                                 </div>
                                 ${hasCapacity ? `<div style="width:100%;height:3px;border-radius:999px;background:#ede8d8;overflow:hidden;margin-top:2px">
                                     <div style="height:3px;border-radius:999px;width:${usedPercentBar.toFixed(1)}%;background:${strokeColor};transition:width .5s"></div>
@@ -1284,8 +1321,8 @@
 
                         const lastIndex = rows.length - 1;
                         setText('fg-trend-last-date', formatDate(rows[lastIndex]?.date || '-'));
-                        setText('fg-trend-last-receive', `${formatter.format(receiveSeries[lastIndex] || 0)} pcs`);
-                        setText('fg-trend-last-delivery', `${formatter.format(deliverySeries[lastIndex] || 0)} pcs`);
+                        setText('fg-trend-last-receive', `${formatter.format(receiveSeries[lastIndex] || 0)} boxes`);
+                        setText('fg-trend-last-delivery', `${formatter.format(deliverySeries[lastIndex] || 0)} boxes`);
                     };
 
                     const render = (payload) => {
@@ -1308,16 +1345,16 @@
                         const overCapacity = Boolean(stock?.over_capacity);
 
                         setText('fg-receiving-qty', `${formatter.format(receivingRows)} boxes`);
-                        setText('fg-receiving-rows', `${formatter.format(receivingQty)} pcs`);
+                        setText('fg-receiving-rows', `${formatter.format(receivingQty)} boxes`);
                         setText('fg-delivery-qty', `${formatter.format(deliveryRows)} boxes`);
-                        setText('fg-delivery-rows', `${formatter.format(deliveryQty)} pcs`);
+                        setText('fg-delivery-rows', `${formatter.format(deliveryQty)} boxes`);
                         setText('fg-stock-qty', `${formatter.format(stockRows)} boxes`);
-                        setText('fg-stock-rows', `${formatter.format(stockQty)} pcs`);
-                        setText('fg-available-qty', `${formatter.format(availableQty)} pcs`);
-                        setText('fg-capacity-label', `of total ${formatter.format(capacityQty)} pcs`);
+                        setText('fg-stock-rows', `${formatter.format(stockQty)} boxes`);
+                        setText('fg-available-qty', `${formatter.format(availableQty)} boxes`);
+                        setText('fg-capacity-label', `of total ${formatter.format(capacityQty)} boxes`);
                         setText('fg-used-percent', `${usedPercent.toFixed(1)}%`);
-                        setText('fg-used-qty', `${formatter.format(stockQty)} pcs`);
-                        setText('fg-remaining-qty', `${formatter.format(availableQty)} pcs`);
+                        setText('fg-used-qty', `${formatter.format(stockQty)} boxes`);
+                        setText('fg-remaining-qty', `${formatter.format(availableQty)} boxes`);
                         setText('fg-capacity-status', overCapacity ? 'OVER CAPACITY' : 'Within Capacity');
 
                         const statusLabel = document.getElementById('fg-capacity-status');

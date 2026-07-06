@@ -160,18 +160,18 @@ class FgDeliveryController extends Controller
                         'part_code' => $deliveryScan->part_code,
                         'operator_employee_id' => $operator->employee_id,
                     ])
-                    ->with('success', 'Re-delivery dari FG Return berhasil. Data dipindahkan ke FG Delivery.');
+                    ->with('success', 'Re-delivery from FG Return successful. Data moved to FG Delivery.');
             }
 
             $existsOnDelivery = $this->findDeliveryScanByPartAndLot($partCode, $lotNo);
             if ($existsOnDelivery !== null) {
                 return back()
-                    ->withErrors(['lot_no' => 'Barang sudah ada di FG Delivery. Jika batal kirim, scan kembali di FG Receiving.'])
+                    ->withErrors(['lot_no' => 'Item already exists in FG Delivery. If you want to cancel the shipment, please scan it again in FG Receiving.'])
                     ->withInput();
             }
 
             return back()
-                ->withErrors(['lot_no' => 'Kombinasi Part Code dan Lot No belum terdaftar pada FG Receiving atau FG Return.'])
+                ->withErrors(['lot_no' => 'The combination of Part Code and Lot No. has not been registered on FG Receiving or FG Return.'])
                 ->withInput();
         }
 
@@ -209,7 +209,7 @@ class FgDeliveryController extends Controller
                 'part_code' => $deliveryScan->part_code,
                 'operator_employee_id' => $operator->employee_id,
             ])
-            ->with('success', 'Scan FG Delivery berhasil diproses. Data dipindahkan ke tabel FG Delivery.');
+            ->with('success', 'Scan FG Delivery successful. Data moved to FG Delivery table.');
     }
 
     public function edit(FgDeliveryScan $scan): View
@@ -242,7 +242,7 @@ class FgDeliveryController extends Controller
 
         return redirect()
             ->back()
-            ->with('success', 'Data FG Delivery berhasil diperbarui.');
+            ->with('success', 'FG Delivery data has been successfully updated.');
     }
 
     public function destroy(FgDeliveryScan $scan): RedirectResponse
@@ -251,7 +251,7 @@ class FgDeliveryController extends Controller
 
         return redirect()
             ->back()
-            ->with('success', 'Data FG Delivery berhasil dihapus.');
+            ->with('success', 'FG Delivery data has been successfully deleted.');
     }
 
     public function previewPart(Request $request): JsonResponse
@@ -259,7 +259,7 @@ class FgDeliveryController extends Controller
         $partCode = trim((string) $request->query('part_code', ''));
         if ($partCode === '') {
             return response()->json([
-                'message' => 'Part Code wajib diisi.',
+                'message' => 'Part Code is required.',
             ], 422);
         }
 
@@ -269,7 +269,7 @@ class FgDeliveryController extends Controller
                 'part_code' => $scan->part_code,
                 'part_name' => $scan->part_name,
                 'qty_box' => (int) $scan->qty_box,
-                'message' => 'Part Code ditemukan. Lanjut scan Lot No.',
+                'message' => 'Part Code found. Continue scanning Lot No.',
             ]);
         }
 
@@ -280,19 +280,19 @@ class FgDeliveryController extends Controller
                 'part_name' => $returnScan->part_name,
                 'qty_box' => (int) $returnScan->qty_box,
                 'source' => 'return',
-                'message' => 'Part ditemukan di FG Return. Lanjut scan Lot No untuk re-delivery.',
+                'message' => 'Part found in FG Return. Continue scanning Lot No for re-delivery.',
             ]);
         }
 
         $existsOnDelivery = $this->findDeliveryScanByPartCode($partCode);
         if ($existsOnDelivery !== null) {
             return response()->json([
-                'message' => 'Part Code ini sudah berada di FG Delivery. Jika batal kirim, scan kembali di FG Receiving.',
+                'message' => 'Part Code is already in FG Delivery. If you want to cancel the shipment, please scan it again in FG Receiving.',
             ], 422);
         }
 
         return response()->json([
-            'message' => 'Part Code belum terdaftar pada FG Receiving atau FG Return.',
+            'message' => 'Part Code has not been registered on FG Receiving or FG Return.',
         ], 422);
     }
 
@@ -302,7 +302,7 @@ class FgDeliveryController extends Controller
         $lotNo = trim((string) $request->query('lot_no', ''));
         if ($partCode === '' || $lotNo === '') {
             return response()->json([
-                'message' => 'Part Code dan Lot No wajib diisi.',
+                'message' => 'Part Code and Lot No are required.',
             ], 422);
         }
 
@@ -314,7 +314,7 @@ class FgDeliveryController extends Controller
                 'lot_no' => $scan->lot_no,
                 'qty_box' => (int) $scan->qty_box,
                 'action' => 'DELIVERY',
-                'message' => 'Lot ditemukan di FG Receiving. Submit untuk memindahkan ke FG Delivery.',
+                'message' => 'Lot found in FG Receiving. Submit to move to FG Delivery.',
             ]);
         }
 
@@ -326,19 +326,19 @@ class FgDeliveryController extends Controller
                 'lot_no' => $returnScan->lot_no,
                 'qty_box' => (int) $returnScan->qty_box,
                 'action' => 'REDELIVER_FROM_RETURN',
-                'message' => 'Lot ditemukan di FG Return. Submit untuk re-delivery.',
+                'message' => 'Lot found in FG Return. Submit for re-delivery.',
             ]);
         }
 
         $existsOnDelivery = $this->findDeliveryScanByPartAndLot($partCode, $lotNo);
         if ($existsOnDelivery !== null) {
             return response()->json([
-                'message' => 'Barang sudah ada di FG Delivery. Jika batal kirim, scan kembali di FG Receiving.',
+                'message' => 'Item is already in FG Delivery. If you want to cancel the shipment, please scan it again in FG Receiving.',
             ], 422);
         }
 
         return response()->json([
-            'message' => 'Kombinasi Part Code dan Lot No belum terdaftar pada FG Receiving atau FG Return.',
+            'message' => 'The combination of Part Code and Lot No. has not been registered on FG Receiving or FG Return.',
         ], 422);
     }
 
@@ -348,8 +348,8 @@ class FgDeliveryController extends Controller
             ->with(['operator', 'deliveryOperator']);
 
         $today = now()->format('Y-m-d');
-        $dateFrom = (string) $request->input('date_from', $today);
-        $dateTo = (string) $request->input('date_to', $today);
+        $dateFrom = substr((string) $request->input('date_from', $today), 0, 10);
+        $dateTo = substr((string) $request->input('date_to', $today), 0, 10);
         if ($this->isDateString($dateFrom) && $this->isDateString($dateTo)) {
             if ($dateFrom > $dateTo) {
                 [$dateFrom, $dateTo] = [$dateTo, $dateFrom];

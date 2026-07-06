@@ -92,8 +92,8 @@ class FgStockController extends Controller
         $query = FgReceivingScan::query()->with('operator');
 
         $today = now()->format('Y-m-d');
-        $dateFrom = (string) $request->input('date_from', $today);
-        $dateTo = (string) $request->input('date_to', $today);
+        $dateFrom = substr((string) $request->input('date_from', $today), 0, 10);
+        $dateTo = substr((string) $request->input('date_to', $today), 0, 10);
         if ($this->isDateString($dateFrom) && $this->isDateString($dateTo)) {
             if ($dateFrom > $dateTo) {
                 [$dateFrom, $dateTo] = [$dateTo, $dateFrom];

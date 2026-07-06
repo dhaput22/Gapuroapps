@@ -158,11 +158,13 @@ class FgSummaryDeliveryController extends Controller
 
     private function applyFilters(Builder $query, array $filters): void
     {
-        if ($filters['date_from'] !== '') {
-            $query->whereRaw('DATE(COALESCE(delivery_at, created_at)) >= ?', [$filters['date_from']]);
+        $dateFrom = substr((string) ($filters['date_from'] ?? ''), 0, 10);
+        $dateTo   = substr((string) ($filters['date_to'] ?? ''), 0, 10);
+        if ($dateFrom !== '') {
+            $query->whereRaw('DATE(COALESCE(delivery_at, created_at)) >= ?', [$dateFrom]);
         }
-        if ($filters['date_to'] !== '') {
-            $query->whereRaw('DATE(COALESCE(delivery_at, created_at)) <= ?', [$filters['date_to']]);
+        if ($dateTo !== '') {
+            $query->whereRaw('DATE(COALESCE(delivery_at, created_at)) <= ?', [$dateTo]);
         }
         if ($filters['search_by'] !== '' && $filters['keyword'] !== '') {
             $col = in_array($filters['search_by'], ['part_code', 'part_name'], true)

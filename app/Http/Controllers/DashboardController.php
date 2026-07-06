@@ -131,7 +131,7 @@ class DashboardController extends Controller
             'item_type_capacities' => $itemTypeCapacities,
             'daily_flow' => $dailyFlow,
             'meta' => [
-                'polling_seconds' => max(5, (int) config('fg_storage.dashboard_polling_seconds', 15)),
+                'polling_seconds' => max(1, (int) config('fg_storage.dashboard_polling_seconds', 1)),
                 'trend_days' => self::TREND_DAYS,
                 'capacity_unit' => 'box',
             ],

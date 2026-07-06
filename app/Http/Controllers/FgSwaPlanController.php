@@ -109,7 +109,7 @@ class FgSwaPlanController extends Controller
 
         return redirect()
             ->back()
-            ->with('success', 'Plan FG for SWA berhasil dihapus.');
+            ->with('success', 'Plan FG for SWA successfully deleted.');
     }
 
     private function validatePlanPayload(Request $request, ?int $exceptId = null): array
@@ -133,7 +133,7 @@ class FgSwaPlanController extends Controller
             }
 
             if ($this->compareLots($startLot, $endLot) > 0) {
-                $validator->errors()->add('end_lot_no', 'End Lot No harus lebih besar atau sama dengan Start Lot No.');
+                $validator->errors()->add('end_lot_no', 'End Lot No. must be greater than or equal to Start Lot No.');
                 return;
             }
 
@@ -145,7 +145,7 @@ class FgSwaPlanController extends Controller
             $ranges = $query->get(['start_lot_no', 'end_lot_no']);
             foreach ($ranges as $range) {
                 if ($this->rangesOverlap($startLot, $endLot, $range->start_lot_no, $range->end_lot_no)) {
-                    $validator->errors()->add('start_lot_no', 'Range lot untuk part ini sudah terdaftar (overlap).');
+                    $validator->errors()->add('start_lot_no', 'Range lot for this part is already registered (overlap).');
                     break;
                 }
             }
@@ -160,8 +160,8 @@ class FgSwaPlanController extends Controller
         $today = now()->format('Y-m-d');
 
         $dateFilter = (string) $request->input('date_filter', 'created_at');
-        $dateFrom = (string) $request->input('date_from', $today);
-        $dateTo = (string) $request->input('date_to', $today);
+        $dateFrom = substr((string) $request->input('date_from', $today), 0, 10);
+        $dateTo = substr((string) $request->input('date_to', $today), 0, 10);
 
         if ($dateFilter === 'created_at') {
             if ($this->isDateString($dateFrom) && $this->isDateString($dateTo)) {
@@ -386,7 +386,7 @@ class FgSwaPlanController extends Controller
     private function ensureWarehouseMutationPermission(Request $request): void
     {
         if (!$request->user()?->canManageWarehouseData()) {
-            abort(403, 'Role Anda tidak diizinkan untuk edit/hapus data gudang.');
+            abort(403, 'Your role is not allowed to edit/delete warehouse data.');
         }
     }
 }
