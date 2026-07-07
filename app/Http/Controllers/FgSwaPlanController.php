@@ -98,7 +98,7 @@ class FgSwaPlanController extends Controller
 
         return redirect()
             ->back()
-            ->with('success', 'Plan FG for SWA berhasil diperbarui.');
+            ->with('success', 'The plan has been successfully updated.');
     }
 
     public function destroy(Request $request, FgSwaPlan $plan): RedirectResponse

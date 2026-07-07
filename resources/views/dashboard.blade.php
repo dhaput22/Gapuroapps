@@ -382,8 +382,6 @@
 
         <section
             id="fg-live-dashboard"
-            data-endpoint="{{ route('dashboard.fg-storage.metrics') }}"
-            data-polling-ms="{{ ((int) data_get($fgMetrics, 'meta.polling_seconds', 1) * 1000) }}"
             class="order-1 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -603,8 +601,6 @@
                     const root = document.getElementById('fg-live-dashboard');
                     if (!root) return;
 
-                    const endpoint = root.dataset.endpoint || '';
-                    const pollingMs = Math.max(1000, Number(root.dataset.pollingMs || '2000'));
                     const formatter = new Intl.NumberFormat('id-ID');
                     const flowBody = document.getElementById('fg-flow-tbody');
                     const typeCapacityBody = document.getElementById('fg-type-capacity-tbody');
@@ -669,135 +665,6 @@
                     };
 
                     const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
-
-                    // ── Capacity Notification System ───────────────────────
-                    const capacityNotifier = (() => {
-                        const WARN_THRESHOLD = 80;
-                        const prevState = {};
-                        let soundMuted = localStorage.getItem('fg_sound_muted') === 'true';
-
-                        function playSound(type) {
-                            if (soundMuted) return;
-                            try {
-                                const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                                if (!AudioCtx) return;
-                                const ctx = new AudioCtx();
-                                const notes = type === 'over'
-                                    ? [[880, 0.12], [880, 0.12], [880, 0.22]]
-                                    : [[520, 0.15], [520, 0.15]];
-                                let t = ctx.currentTime + 0.05;
-                                notes.forEach(([freq, dur]) => {
-                                    const osc = ctx.createOscillator();
-                                    const gain = ctx.createGain();
-                                    osc.connect(gain); gain.connect(ctx.destination);
-                                    osc.type = 'sine';
-                                    osc.frequency.value = freq;
-                                    gain.gain.setValueAtTime(0.45, t);
-                                    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
-                                    osc.start(t); osc.stop(t + dur);
-                                    t += dur + 0.07;
-                                });
-                                setTimeout(() => ctx.close(), (t + 0.5) * 1000);
-                            } catch (_) {}
-                        }
-
-                        function showToast(level, title, body) {
-                            const container = document.getElementById('capacity-notif-container');
-                            if (!container) return;
-                            const isOver = level === 'over';
-                            const id = `cap-n-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
-                            const bg = isOver ? '#fff1f2' : '#fffbeb';
-                            const border = isOver ? '#f43f5e' : '#f59e0b';
-                            const textColor = isOver ? '#881337' : '#78350f';
-                            const toast = document.createElement('div');
-                            toast.id = id;
-                            toast.style.cssText = `pointer-events:auto;background:${bg};border:1.5px solid ${border};border-radius:12px;padding:12px 14px;box-shadow:0 4px 24px rgba(0,0,0,.13);display:flex;gap:10px;align-items:flex-start;animation:notif-in 0.3s ease`;
-                            const closeBtn = document.createElement('button');
-                            closeBtn.type = 'button';
-                            closeBtn.title = 'Close';
-                            closeBtn.style.cssText = `flex-shrink:0;background:none;border:none;cursor:pointer;font-size:18px;color:${textColor};opacity:.45;padding:0 2px;line-height:1`;
-                            closeBtn.textContent = '×';
-                            closeBtn.addEventListener('click', function() {
-                                toast.style.animation = 'notif-out 0.25s ease forwards';
-                                setTimeout(function() { toast.remove(); }, 250);
-                            });
-                            const icon = document.createElement('span');
-                            icon.style.cssText = 'font-size:22px;line-height:1.1;flex-shrink:0';
-                            icon.textContent = isOver ? '🚨' : '⚠️';
-                            const content = document.createElement('div');
-                            content.style.cssText = 'flex:1;min-width:0';
-                            content.innerHTML = `
-                                <div style="font-weight:700;font-size:13px;color:${textColor};line-height:1.3">${title}</div>
-                                <div style="font-size:11.5px;color:${textColor};opacity:.8;margin-top:3px;line-height:1.4">${body}</div>
-                            `;
-                            toast.appendChild(icon);
-                            toast.appendChild(content);
-                            toast.appendChild(closeBtn);
-                            container.appendChild(toast);
-                        }
-
-                        function check(payload) {
-                            const items = payload?.item_type_capacities ?? [];
-                            const pct = Number(payload?.stock?.used_percent ?? 0);
-                            const over = Boolean(payload?.stock?.over_capacity);
-
-                            // warehouse-wide check
-                            const wLvl = over ? 'over' : pct >= WARN_THRESHOLD ? 'warn' : 'ok';
-                            const wPrev = prevState['__wh__'] ?? 'ok';
-                            if (wLvl !== wPrev) {
-                                if (wLvl === 'over') {
-                                    playSound('over');
-                                    showToast('over', 'WAREHOUSE OVER CAPACITY!', `Total warehouse capacity has been exceeded — ${pct.toFixed(1)}% used`);
-                                } else if (wLvl === 'warn') {
-                                    playSound('warn');
-                                    showToast('warn', 'Warehouse Capacity Warning', `Warehouse capacity is approaching its limit — ${pct.toFixed(1)}% used`);
-                                }
-                            }
-                            prevState['__wh__'] = wLvl;
-
-                            // per item type check
-                            items.forEach(function(item) {
-                                if (!item.has_capacity) return;
-                                const k = item.key;
-                                const ip = Number(item.used_percent ?? 0);
-                                const io = Boolean(item.over_capacity);
-                                const lvl = io ? 'over' : ip >= WARN_THRESHOLD ? 'warn' : 'ok';
-                                const prev = prevState[k] ?? 'ok';
-                                if (lvl !== prev) {
-                                    if (lvl === 'over') {
-                                        playSound('over');
-                                        showToast('over', `${item.label} — OVER CAPACITY`, `Stock exceeds capacity by ${formatter.format(item.excess_qty ?? 0)} pcs (${ip.toFixed(1)}% used)`);
-                                    } else if (lvl === 'warn') {
-                                        playSound('warn');
-                                        showToast('warn', `${item.label} — Approaching Limit`, `Capacity almost full — ${ip.toFixed(1)}% used`);
-                                    }
-                                }
-                                prevState[k] = lvl;
-                            });
-                        }
-
-                        function syncMuteUI() {
-                            const btn = document.getElementById('btn-notif-mute');
-                            const icon = document.getElementById('btn-notif-mute-icon');
-                            const lbl = document.getElementById('btn-notif-mute-label');
-                            if (btn) btn.title = soundMuted ? 'Enable sound notifications' : 'Mute sound notifications';
-                            if (icon) icon.textContent = soundMuted ? '🔇' : '🔔';
-                            if (lbl) lbl.textContent = soundMuted ? 'Sound Off' : 'Sound On';
-                        }
-
-                        function toggleMute() {
-                            soundMuted = !soundMuted;
-                            localStorage.setItem('fg_sound_muted', soundMuted);
-                            syncMuteUI();
-                            return soundMuted;
-                        }
-
-                        syncMuteUI();
-
-                        return { check, toggleMute };
-                    })();
-
-                    document.getElementById('btn-notif-mute')?.addEventListener('click', () => capacityNotifier.toggleMute());
 
                     const formatDate = (value) => {
                         if (!value) return '-';
@@ -1377,37 +1244,20 @@
                         renderCapacityViz(payload?.item_type_capacities ?? []);
                         renderAreaMap(payload?.item_type_capacities ?? []);
                         renderFlowTable(payload?.daily_flow ?? []);
-                        capacityNotifier.check(payload);
-                    };
-
-                    const refresh = async () => {
-                        if (!endpoint) return;
-
-                        setIndicatorState('loading');
-                        try {
-                            const response = await fetch(endpoint, {
-                                headers: {
-                                    Accept: 'application/json',
-                                },
-                                cache: 'no-store',
-                            });
-
-                            if (!response.ok) {
-                                throw new Error(`Request failed with status ${response.status}`);
-                            }
-
-                            const payload = await response.json();
-                            render(payload);
-                            setIndicatorState('ok');
-                        } catch (error) {
-                            setIndicatorState('error');
-                        }
                     };
 
                     const initialMetricsEl = document.getElementById('fg-initial-metrics');
                     const initialMetrics = initialMetricsEl ? JSON.parse(initialMetricsEl.textContent) : null;
                     if (initialMetrics) render(initialMetrics);
-                    refresh();
+
+                    // Metrics are fetched once for the whole app by the site-wide notifier poller in
+                    // layouts/app.blade.php; this page only listens for its results instead of polling
+                    // the same endpoint a second time.
+                    window.addEventListener('fg-metrics-updated', (event) => {
+                        render(event.detail);
+                        setIndicatorState('ok');
+                    });
+                    window.addEventListener('fg-metrics-error', () => setIndicatorState('error'));
 
                     const rerenderChart = () => {
                         if (latestPayload !== null) {
@@ -1422,9 +1272,7 @@
                         window.addEventListener('resize', rerenderChart);
                     }
 
-                    const timer = setInterval(refresh, pollingMs);
                     window.addEventListener('beforeunload', () => {
-                        clearInterval(timer);
                         if (chartResizeObserver) {
                             chartResizeObserver.disconnect();
                         }
