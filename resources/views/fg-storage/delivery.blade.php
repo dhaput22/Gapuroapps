@@ -141,8 +141,8 @@
                     <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">
                         <a href="{{ $sortUrl('delivery_at') }}" class="hover:underline">Delivery Date</a>
                     </th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">Kanban ID</th>
-                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">Kanban ID GNS</th>
+                    {{-- <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">Kanban ID</th>
+                    <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">Kanban ID GNS</th> --}}
                     <th class="whitespace-nowrap border border-yellow-300 px-2 py-2 text-center">
                         <a href="{{ $sortUrl('part_code') }}" class="hover:underline">Part Code</a>
                     </th>
@@ -173,8 +173,8 @@
                 <tr>
                     <td class="border border-yellow-200 px-2 py-1 text-center">{{ $rowNumber }}</td>
                     <td class="border border-yellow-200 px-2 py-1">{{ optional($scan->delivery_at)->format('Y-m-d') ?? optional($scan->created_at)->format('Y-m-d') }}</td>
-                    <td class="border border-yellow-200 px-2 py-1">-</td>
-                    <td class="border border-yellow-200 px-2 py-1">-</td>
+                    {{-- <td class="border border-yellow-200 px-2 py-1">-</td>
+                    <td class="border border-yellow-200 px-2 py-1">-</td> --}}
                     <td class="border border-yellow-200 px-2 py-1">{{ $scan->part_code }}</td>
                     <td class="border border-yellow-200 px-2 py-1">{{ $scan->part_name }}</td>
                     <td class="border border-yellow-200 px-2 py-1">{{ $scan->label_id ?: '-' }}</td>

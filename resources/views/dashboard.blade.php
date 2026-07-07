@@ -1188,8 +1188,8 @@
 
                         const lastIndex = rows.length - 1;
                         setText('fg-trend-last-date', formatDate(rows[lastIndex]?.date || '-'));
-                        setText('fg-trend-last-receive', `${formatter.format(receiveSeries[lastIndex] || 0)} boxes`);
-                        setText('fg-trend-last-delivery', `${formatter.format(deliverySeries[lastIndex] || 0)} boxes`);
+                        setText('fg-trend-last-receive', `${formatter.format(receiveSeries[lastIndex] || 0)} pcs`);
+                        setText('fg-trend-last-delivery', `${formatter.format(deliverySeries[lastIndex] || 0)} pcs`);
                     };
 
                     const render = (payload) => {
@@ -1212,15 +1212,15 @@
                         const overCapacity = Boolean(stock?.over_capacity);
 
                         setText('fg-receiving-qty', `${formatter.format(receivingRows)} boxes`);
-                        setText('fg-receiving-rows', `${formatter.format(receivingQty)} boxes`);
+                        setText('fg-receiving-rows', `${formatter.format(receivingQty)} pcs`);
                         setText('fg-delivery-qty', `${formatter.format(deliveryRows)} boxes`);
-                        setText('fg-delivery-rows', `${formatter.format(deliveryQty)} boxes`);
+                        setText('fg-delivery-rows', `${formatter.format(deliveryQty)} pcs`);
                         setText('fg-stock-qty', `${formatter.format(stockRows)} boxes`);
-                        setText('fg-stock-rows', `${formatter.format(stockQty)} boxes`);
+                        setText('fg-stock-rows', `${formatter.format(stockQty)} pcs`);
                         setText('fg-available-qty', `${formatter.format(availableQty)} boxes`);
                         setText('fg-capacity-label', `of total ${formatter.format(capacityQty)} boxes`);
                         setText('fg-used-percent', `${usedPercent.toFixed(1)}%`);
-                        setText('fg-used-qty', `${formatter.format(stockQty)} boxes`);
+                        setText('fg-used-qty', `${formatter.format(stockQty)} pcs`);
                         setText('fg-remaining-qty', `${formatter.format(availableQty)} boxes`);
                         setText('fg-capacity-status', overCapacity ? 'OVER CAPACITY' : 'Within Capacity');
 
